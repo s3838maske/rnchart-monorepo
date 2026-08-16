@@ -52,6 +52,42 @@ export type {
   ViewportSlice,
 } from './perf';
 
+export {
+  describeChart,
+  describeOutliers,
+  describePoint,
+  describeSeries,
+} from './a11y';
+export type {
+  DescribeOptions,
+  SeriesDescription,
+  TrendDirection,
+} from './a11y';
+
+export { computeBoxStats, notchWidth, quantileSorted } from './stats';
+export type {
+  BoxStats,
+  BoxStatsOptions,
+  QuantileType,
+  WhiskerMethod,
+} from './stats';
+
+export {
+  bellCurve,
+  chooseBinCount,
+  histogram,
+  pareto,
+  waterfall,
+} from './derive';
+export type {
+  BinMethod,
+  HistogramBin,
+  HistogramOptions,
+  ParetoPoint,
+  WaterfallBar,
+  WaterfallStep,
+} from './derive';
+
 export { createRingBuffer } from './stream';
 export type { RingBuffer, RingView } from './stream';
 

@@ -3,6 +3,51 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] — unreleased
+
+Completes the v1 line of the roadmap: phases 22 through 27.
+
+### Added — annotations (v1.2.0)
+
+- `<PlotLine>`, `<PlotBand>` and `<Annotations>`. Positioned in DATA
+  coordinates, so they track pan and zoom through the same scales the series
+  use. Collision handling reuses `resolveLabelPlacement` — the same function
+  the data labels use, not a second implementation.
+
+### Added — statistical series (v1.3.0)
+
+- `<AreaRange>`, `<Dumbbell>` for `[low, high]` pairs.
+- `<BoxPlot>` with tukey / minmax / stddev whiskers, notches and jittered
+  outliers. `<ErrorBars>` attachable over any series.
+- `<Waterfall>` with running totals and connectors.
+- Core maths: `computeBoxStats`, `quantileSorted` (R types 6 and 7),
+  `histogram` with Freedman–Diaconis binning, `waterfall`, `pareto`,
+  `bellCurve`.
+
+### Added — accessibility (v1.4.0)
+
+- `<ChartAccessibility>` — an automatic spoken summary plus one focusable
+  invisible view per datum, so a screen-reader user can swipe through the
+  data a Skia canvas would otherwise hide entirely.
+- `<DataTable>` and `<DataTableToggle>` — the numbers as an accessible table,
+  useful to sighted users too.
+- `<Pattern>` — texture fills so series are distinguishable without colour.
+- Core: `describeChart`, `describeSeries`, `describePoint`,
+  `describeOutliers`. Trend is measured relative to the data's own standard
+  deviation, not an absolute threshold.
+
+### Fixed
+
+- Drilldown pushed a duplicate level for every tap that landed while an async
+  resolution was still in flight, producing breadcrumbs like
+  `Countries › India › MH › MH › MH`. Taps are now ignored while a drill is
+  resolving.
+- The leaf case cleared its loading flag with a push immediately followed by a
+  pop. Replaced with a `settle` action that does what it says.
+- Removed the wall-clock assertions from the unit suite. They were flaky by
+  nature — competing with 20 other suites for CPU — and a randomly failing
+  test trains people to re-run until green. `yarn bench` measures properly.
+
 ## [0.2.0] — unreleased
 
 v1.1.0 of the roadmap: polar and radial charts.

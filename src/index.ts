@@ -122,6 +122,56 @@ export { nearestIndexByX, useCursor } from './charts/interaction/cursorState';
 export type { CursorState } from './charts/interaction/cursorState';
 
 // ---------------------------------------------------------------------------
+// Annotations (v1.2.0)
+// ---------------------------------------------------------------------------
+
+export { Annotations, PlotBand, PlotLine } from './charts/overlays/Annotations';
+export type {
+  AnnotationSpec,
+  AnnotationsProps,
+  PlotBandProps,
+  PlotLineProps,
+} from './charts/overlays/Annotations';
+
+// ---------------------------------------------------------------------------
+// Statistical series (v1.3.0)
+// ---------------------------------------------------------------------------
+
+export {
+  AreaRange,
+  BoxPlot,
+  Dumbbell,
+  ErrorBars,
+  Waterfall,
+} from './charts/series/Statistical';
+export type {
+  AreaRangeProps,
+  BoxPlotProps,
+  DumbbellProps,
+  ErrorBarsProps,
+  WaterfallProps,
+} from './charts/series/Statistical';
+
+// ---------------------------------------------------------------------------
+// Accessibility (v1.4.0)
+// ---------------------------------------------------------------------------
+
+export {
+  ChartAccessibility,
+  DataTable,
+  DataTableToggle,
+  announce,
+} from './charts/a11y/ChartAccessibility';
+export type {
+  ChartAccessibilityProps,
+  DataTableProps,
+  DataTableToggleProps,
+} from './charts/a11y/ChartAccessibility';
+
+export { Pattern } from './charts/patterns';
+export type { PatternKind, PatternProps } from './charts/patterns';
+
+// ---------------------------------------------------------------------------
 // Overlays and theming
 // ---------------------------------------------------------------------------
 
@@ -172,7 +222,19 @@ export type { FontSpec, FontWeight, RendererInfo } from './skia';
 
 export {
   applyStacking,
+  bellCurve,
+  chooseBinCount,
+  computeBoxStats,
   createRingBuffer,
+  describeChart,
+  describeOutliers,
+  describePoint,
+  describeSeries,
+  histogram,
+  notchWidth,
+  pareto,
+  quantileSorted,
+  waterfall,
   autoDecimate,
   clamp,
   clipToViewport,
@@ -208,8 +270,21 @@ export {
 
 export type {
   Arc,
+  BinMethod,
+  BoxStats,
+  BoxStatsOptions,
+  DescribeOptions,
+  HistogramBin,
+  HistogramOptions,
+  ParetoPoint,
+  QuantileType,
   RingBuffer,
   RingView,
+  SeriesDescription,
+  TrendDirection,
+  WaterfallBar,
+  WaterfallStep,
+  WhiskerMethod,
   ArcOptions,
   AutoDecimateOptions,
   AxisInput,

@@ -148,6 +148,28 @@ describe('drilldownReducer', () => {
     });
   });
 
+  describe('settle', () => {
+    it('clears loading without changing the level', () => {
+      // The leaf case. Previously this was faked with a push followed by a
+      // pop, which is a state change pretending to be a no-op.
+      const busy: DrilldownState = {
+        ...stateWith('All', 'India'),
+        loading: true,
+      };
+
+      const next = drilldownReducer(busy, { type: 'settle' });
+
+      expect(next.loading).toBe(false);
+      expect(next.stack).toHaveLength(2);
+      expect(next.stack[1]?.label).toBe('India');
+    });
+
+    it('is a no-op when nothing is loading', () => {
+      const idle = stateWith('All');
+      expect(drilldownReducer(idle, { type: 'settle' })).toBe(idle);
+    });
+  });
+
   describe('reset', () => {
     it('collapses to a single root level', () => {
       const next = drilldownReducer(stateWith('All', 'India', 'MH'), {

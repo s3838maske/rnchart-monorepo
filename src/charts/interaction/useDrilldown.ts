@@ -23,6 +23,8 @@ export type DrilldownAction =
   | { type: 'pop' }
   | { type: 'popTo'; depth: number }
   | { type: 'loading' }
+  /** Resolved to a leaf: clear loading without changing level. */
+  | { type: 'settle' }
   | { type: 'error'; message: string }
   | { type: 'reset'; root: DrilldownLevel };
 
@@ -59,6 +61,9 @@ export function drilldownReducer(
       };
     case 'loading':
       return { ...state, loading: true, error: null };
+    case 'settle':
+      if (!state.loading) return state;
+      return { ...state, loading: false };
     case 'error':
       return { ...state, loading: false, error: action.message };
     case 'reset':
@@ -165,6 +170,13 @@ export function useDrilldown(options: UseDrilldownOptions): DrilldownApi {
 
   const drill = useCallback(
     (index: number) => {
+      // Ignore taps while a drill is already resolving.
+      //
+      // Without this, every extra tap during an async resolution pushes
+      // ANOTHER level: the callback still closes over the old level, so the
+      // same child gets appended repeatedly and the breadcrumb reads
+      // "Countries > India > MH > MH > MH". One navigation at a time.
+      if (state.loading) return;
       if (depth >= maxDepth) return;
       const datum = level.data[index];
       if (datum === undefined) return;
@@ -189,8 +201,7 @@ export function useDrilldown(options: UseDrilldownOptions): DrilldownApi {
             if (child === null || child === undefined || child.length === 0) {
               // A leaf, not a failure. Clear loading and stay put rather than
               // pushing an empty level the user then has to back out of.
-              dispatch({ type: 'push', level });
-              dispatch({ type: 'pop' });
+              dispatch({ type: 'settle' });
               return;
             }
             dispatch({
@@ -211,7 +222,7 @@ export function useDrilldown(options: UseDrilldownOptions): DrilldownApi {
         level: { data: result, label, fromIndex: index },
       });
     },
-    [depth, level, maxDepth, onDrill, labelKey]
+    [depth, level, maxDepth, onDrill, labelKey, state.loading]
   );
 
   useEffect(() => {
