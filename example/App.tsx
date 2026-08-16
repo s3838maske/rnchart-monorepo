@@ -10,6 +10,7 @@ import {
   Bar,
   Chart,
   Crosshair,
+  Drilldown,
   Gauge,
   Grid,
   Legend,
@@ -75,6 +76,36 @@ const WIND = [
   { dir: 'W', calm: 6, breeze: 10, gale: 8 },
   { dir: 'NW', calm: 10, breeze: 7, gale: 3 },
 ];
+
+const COUNTRIES = [
+  { name: 'India', value: 420 },
+  { name: 'Japan', value: 310 },
+  { name: 'Brazil', value: 260 },
+];
+
+const STATES: Record<string, { name: string; value: number }[]> = {
+  India: [
+    { name: 'MH', value: 160 },
+    { name: 'KA', value: 140 },
+    { name: 'TN', value: 120 },
+  ],
+  Japan: [
+    { name: 'Tokyo', value: 180 },
+    { name: 'Osaka', value: 130 },
+  ],
+  Brazil: [
+    { name: 'SP', value: 150 },
+    { name: 'RJ', value: 110 },
+  ],
+};
+
+const CITIES: Record<string, { name: string; value: number }[]> = {
+  MH: [
+    { name: 'Pune', value: 90 },
+    { name: 'Nagpur', value: 70 },
+  ],
+  KA: [{ name: 'Bengaluru', value: 140 }],
+};
 
 const SCATTERED = Array.from({ length: 40 }, (_, i) => ({
   x: i,
@@ -457,6 +488,54 @@ export default function App(): ReactElement {
           caption="The ECG pattern: a fixed window overwritten left to right by a moving write head."
         >
           <LiveFeed mode="sweep" />
+        </Section>
+
+        <Section
+          title="Drilldown — tap a bar"
+          caption="Country → state → city. Breadcrumbs navigate back, and Android's hardware back button ascends one level before falling through."
+        >
+          <Drilldown
+            data={COUNTRIES}
+            rootLabel="Countries"
+            labelKey="name"
+            transition="slide"
+            onDrill={(datum) => {
+              const key = String(datum.name);
+
+              const states = STATES[key];
+              if (states !== undefined) return states;
+
+              // The third level is deliberately async, to exercise the
+              // loading path and prove the spinner clears on arrival.
+              const cities = CITIES[key];
+              if (cities !== undefined) {
+                return new Promise<typeof cities>((resolve) => {
+                  setTimeout(() => {
+                    resolve(cities);
+                  }, 400);
+                });
+              }
+
+              return null;
+            }}
+          >
+            {(api) => (
+              <Chart
+                data={api.level.data}
+                xKey="name"
+                yKeys={['value']}
+                height={200}
+                onPointPress={(i) => {
+                  api.drill(i);
+                }}
+              >
+                <Grid />
+                <YAxis />
+                <XAxis />
+                <Bar seriesKey="value" cornerRadius={6} />
+              </Chart>
+            )}
+          </Drilldown>
         </Section>
 
         <Section title="Donut" caption="Arc geometry computed in core.">

@@ -53,6 +53,15 @@ export type ChartProps = {
   readonly maxZoom?: number;
   /** Carry a flick with momentum instead of stopping dead on release. */
   readonly momentum?: boolean;
+  /**
+   * Fires with the datum index nearest a tap.
+   *
+   * A JS-thread callback by design: it exists to trigger navigation, a
+   * drilldown or analytics, all of which are React work. Unlike the cursor,
+   * it fires once per tap rather than per frame, so the thread boundary
+   * costs nothing.
+   */
+  readonly onPointPress?: (index: number) => void;
   readonly children?: ReactNode;
 };
 
@@ -101,6 +110,7 @@ export function Chart({
   zoomable = false,
   maxZoom = 8,
   momentum = true,
+  onPointPress,
   children,
 }: ChartProps): ReactElement {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -408,11 +418,27 @@ export function Chart({
     savedTranslate,
   ]);
 
+  const tapGesture = useMemo(() => {
+    if (onPointPress === undefined) return null;
+    return Gesture.Tap()
+      .maxDuration(300)
+      .onEnd((e) => {
+        'worklet';
+        const index = nearestIndexByX(pixelXs, e.x);
+        if (index >= 0) runOnJS(onPointPress)(index);
+      });
+  }, [onPointPress, pixelXs]);
+
   const activeGesture = useMemo(() => {
-    if (zoomable && cursor) return Gesture.Simultaneous(gesture, zoomGesture);
-    if (zoomable) return zoomGesture;
-    return gesture;
-  }, [zoomable, cursor, gesture, zoomGesture]);
+    const parts = [];
+    if (cursor) parts.push(gesture);
+    if (zoomable) parts.push(zoomGesture);
+    if (tapGesture !== null) parts.push(tapGesture);
+
+    if (parts.length === 0) return gesture;
+    if (parts.length === 1) return parts[0]!;
+    return Gesture.Simultaneous(...parts);
+  }, [zoomable, cursor, gesture, zoomGesture, tapGesture]);
 
   const ready = size.width > 0 && size.height > 0;
   const isEmpty = data.length === 0;
@@ -433,7 +459,7 @@ export function Chart({
     <View style={[{ height }, styles.root, style]} onLayout={onLayout}>
       {ready && !isEmpty ? (
         <>
-          {cursor || zoomable ? (
+          {cursor || zoomable || onPointPress !== undefined ? (
             <GestureDetector gesture={activeGesture}>
               <View style={StyleSheet.absoluteFill}>{canvas}</View>
             </GestureDetector>

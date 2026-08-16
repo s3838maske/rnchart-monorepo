@@ -88,6 +88,26 @@ export type { CrosshairProps } from './charts/interaction/Crosshair';
 export { Tooltip } from './charts/interaction/Tooltip';
 export type { TooltipProps } from './charts/interaction/Tooltip';
 
+export { Breadcrumb, Drilldown } from './charts/interaction/Drilldown';
+export type {
+  BreadcrumbProps,
+  DrilldownProps,
+  DrilldownTransition,
+} from './charts/interaction/Drilldown';
+
+export {
+  drilldownReducer,
+  useDrilldown,
+} from './charts/interaction/useDrilldown';
+export type {
+  DrilldownAction,
+  DrillResolver,
+  DrilldownApi,
+  DrilldownLevel,
+  DrilldownState,
+  UseDrilldownOptions,
+} from './charts/interaction/useDrilldown';
+
 export { ZoomPan } from './charts/interaction/ZoomPan';
 export type { ZoomPanProps } from './charts/interaction/ZoomPan';
 

@@ -95,3 +95,63 @@ small the swatch renders.
 
 The legend is a React Native view, not Skia — it needs real touch targets and
 screen-reader labels.
+
+## Drilldown
+
+Tap a datum to descend into its children. On mobile this is the primary
+interaction for hierarchical data — far more natural than the hover-and-expand
+pattern desktop charts use.
+
+```tsx
+<Drilldown
+  data={countries}
+  rootLabel="Countries"
+  labelKey="name"
+  transition="slide"
+  onDrill={(datum) => statesFor(String(datum.name))}   // sync or async
+>
+  {(api) => (
+    <Chart data={api.level.data} xKey="name" yKeys={['value']} onPointPress={api.drill}>
+      <Grid />
+      <YAxis />
+      <XAxis />
+      <Bar seriesKey="value" />
+    </Chart>
+  )}
+</Drilldown>
+```
+
+A **render prop**, not cloned children: the chart needs the current level's data
+and the `drill` callback, and passing those down by cloning arbitrary children
+is guesswork about their prop names.
+
+| Prop | Default | Notes |
+| --- | --- | --- |
+| `onDrill` | — | Return child data, a Promise of it, or `null` for a leaf |
+| `transition` | `slide` | `slide`, `fade`, `zoom`, `none` |
+| `breadcrumb` | `true` | Tappable trail; jumps to any level |
+| `maxDepth` | `4` | |
+| `labelKey` | — | Field used for the breadcrumb label |
+| `handleBack` | `true` | Android hardware back ascends one level |
+
+Returning a Promise shows the loading state automatically. Returning `null` or
+an empty array is treated as a **leaf** — the chart stays put rather than
+pushing an empty level the user then has to back out of.
+
+Android's back button is intercepted only while there is somewhere to ascend
+to, so at the root it falls through to navigation as users expect.
+
+### Testing the level stack
+
+The state machine is exported as a pure reducer, so the rules can be tested
+without rendering anything:
+
+```ts
+import { drilldownReducer } from 'react-native-graphify';
+
+expect(drilldownReducer(rootOnly, { type: 'pop' })).toBe(rootOnly); // root survives
+```
+
+The root can never be popped away, an out-of-range jump is ignored, an error
+always clears loading, and arriving at a level clears both. Those are the rules
+worth guarding, and none of them need a component to exercise.
