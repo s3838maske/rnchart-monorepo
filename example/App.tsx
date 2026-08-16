@@ -20,6 +20,7 @@ import {
   Scatter,
   Tooltip,
   WindRose,
+  ZoomPan,
   XAxis,
   YAxis,
 } from 'react-native-graphify';
@@ -350,6 +351,70 @@ export default function App(): ReactElement {
             <Text style={styles.donutValue}>82%</Text>
             <Text style={styles.donutLabel}>Move</Text>
           </ActivityGauge>
+        </Section>
+
+        <Section
+          title="Radar — gradient fill"
+          caption="A radial gradient runs centre-outward, matching how the eye reads distance from the middle as magnitude."
+        >
+          <PolarChart
+            data={SKILLS}
+            categoryKey="axis"
+            yKeys={['alpha']}
+            height={300}
+          >
+            <PolarGrid />
+            <AngularAxis />
+            <Radar
+              seriesKey="alpha"
+              gradient={{
+                type: 'radial',
+                colors: [
+                  'rgba(139, 92, 246, 0.05)',
+                  'rgba(59, 130, 246, 0.45)',
+                  'rgba(6, 182, 212, 0.75)',
+                ],
+                positions: [0, 0.55, 1],
+              }}
+              markerSize={4}
+            />
+          </PolarChart>
+        </Section>
+
+        <Section
+          title="Gradient column"
+          caption="Any series takes the same gradient spec — a colour array is the short form."
+        >
+          <Chart data={MONTHLY} xKey="month" yKeys={['revenue']} height={200}>
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Bar
+              seriesKey="revenue"
+              gradient={['#8b5cf6', '#3b82f6', '#06b6d4']}
+              cornerRadius={6}
+            />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Pinch to zoom, drag to pan"
+          caption="Pinch anchors at your fingers, not the centre. A flick carries momentum and rubber-bands at the data edges. Double-tap resets."
+        >
+          <Chart
+            data={MONTHLY}
+            xKey="month"
+            yKeys={['revenue']}
+            height={220}
+            zoomable
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <ZoomPan>
+              <Line seriesKey="revenue" markers />
+            </ZoomPan>
+          </Chart>
         </Section>
 
         <Section title="Donut" caption="Arc geometry computed in core.">

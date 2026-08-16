@@ -5,6 +5,8 @@ import type { SkPath } from '@shopify/react-native-skia';
 
 import { usePolar } from '../PolarContext';
 import { withAlpha } from '../colors';
+import { SeriesGradient, resolveGradient } from '../gradient';
+import type { GradientInput } from '../gradient';
 
 export type RadarProps = {
   readonly seriesKey: string;
@@ -14,6 +16,13 @@ export type RadarProps = {
   readonly strokeWidth?: number;
   readonly markers?: boolean;
   readonly markerSize?: number;
+  /**
+   * Gradient fill. `true`, a colour array, or a full spec.
+   *
+   * A `radial` gradient reads best on a radar: it runs centre-outward, which
+   * matches how the eye reads distance from the middle as magnitude.
+   */
+  readonly gradient?: GradientInput;
 };
 
 function buildRadarPath(
@@ -49,9 +58,20 @@ export function Radar({
   strokeWidth = 2,
   markers = true,
   markerSize = 3.5,
+  gradient,
 }: RadarProps): ReactElement {
   const polar = usePolar();
   const tint = color ?? polar.colorFor(seriesKey);
+  const gradientSpec = resolveGradient(gradient, tint);
+
+  // The gradient frame is the bounding square of the outer ring, so a radial
+  // ramp is centred on the chart rather than on the series polygon.
+  const frame = {
+    x: polar.centerX - polar.outerRadius,
+    y: polar.centerY - polar.outerRadius,
+    width: polar.outerRadius * 2,
+    height: polar.outerRadius * 2,
+  };
 
   const points = useMemo(() => {
     const values = polar.valuesFor(seriesKey);
@@ -73,7 +93,15 @@ export function Radar({
   return (
     <Group>
       {fill ? (
-        <Path path={path} style="fill" color={withAlpha(tint, fillOpacity)} />
+        <Path
+          path={path}
+          style="fill"
+          color={gradientSpec === null ? withAlpha(tint, fillOpacity) : tint}
+        >
+          {gradientSpec !== null ? (
+            <SeriesGradient spec={gradientSpec} frame={frame} />
+          ) : null}
+        </Path>
       ) : null}
 
       {strokeWidth > 0 ? (

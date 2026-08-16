@@ -4,7 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import type { LayoutChangeEvent, StyleProp, ViewStyle } from 'react-native';
 import { Canvas } from '@shopify/react-native-skia';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
-import { useSharedValue } from 'react-native-reanimated';
+import { useSharedValue, withDecay, withTiming } from 'react-native-reanimated';
 import { runOnJS } from 'react-native-worklets';
 import { computeDomain, normaliseMissing, solveLayout } from '../core';
 import type { AxisScaleSpec, Category, FormatSpec, Padding } from '../core';
@@ -16,6 +16,12 @@ import { seriesColorAt } from './colors';
 import { CursorProvider, nearestIndexByX } from './interaction/cursorState';
 import type { CursorState } from './interaction/cursorState';
 import { triggerImpact } from './interaction/haptics';
+import {
+  ViewportProvider,
+  clampTranslate,
+  zoomAboutFocal,
+} from './interaction/viewport';
+import type { ViewportState } from './interaction/viewport';
 
 export type XScaleKind = 'band' | 'point' | 'linear' | 'time';
 
@@ -42,6 +48,11 @@ export type ChartProps = {
   readonly haptics?: boolean;
   /** React Native overlays drawn above the canvas — tooltips, legends. */
   readonly overlay?: ReactNode;
+  /** Enable pan and pinch-zoom. Wrap series in `<ZoomPan>` to receive it. */
+  readonly zoomable?: boolean;
+  readonly maxZoom?: number;
+  /** Carry a flick with momentum instead of stopping dead on release. */
+  readonly momentum?: boolean;
   readonly children?: ReactNode;
 };
 
@@ -87,6 +98,9 @@ export function Chart({
   cursor = false,
   haptics = true,
   overlay,
+  zoomable = false,
+  maxZoom = 8,
+  momentum = true,
   children,
 }: ChartProps): ReactElement {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -295,6 +309,111 @@ export function Chart({
     return Gesture.Simultaneous(pan, press);
   }, [pixelXs, haptics, cursorX, cursorIndex, cursorActive, cursorSnappedX]);
 
+  // ---- Viewport (phase 19) ----------------------------------------------
+  const scaleX = useSharedValue(1);
+  const translateX = useSharedValue(0);
+  const zoomActive = useSharedValue(false);
+  const savedScale = useSharedValue(1);
+  const savedTranslate = useSharedValue(0);
+
+  const viewportState = useMemo<ViewportState>(
+    () => ({ scaleX, translateX, active: zoomActive }),
+    [scaleX, translateX, zoomActive]
+  );
+
+  const plotWidth = layout.plotArea.width;
+
+  const zoomGesture = useMemo(() => {
+    const pinch = Gesture.Pinch()
+      .onBegin(() => {
+        'worklet';
+        zoomActive.value = true;
+        savedScale.value = scaleX.value;
+        savedTranslate.value = translateX.value;
+      })
+      .onUpdate((e) => {
+        'worklet';
+        const next = Math.min(maxZoom, Math.max(1, savedScale.value * e.scale));
+        // Anchor at the fingers, never the plot centre.
+        const focal = e.focalX;
+        const nextTranslate = zoomAboutFocal(
+          focal,
+          savedScale.value,
+          next,
+          savedTranslate.value
+        );
+        scaleX.value = next;
+        translateX.value = clampTranslate(nextTranslate, next, plotWidth);
+      })
+      .onEnd(() => {
+        'worklet';
+        zoomActive.value = false;
+        // A pinch back below 1 springs to the full extent rather than
+        // leaving the chart smaller than its own plot area.
+        if (scaleX.value <= 1.001) {
+          scaleX.value = withTiming(1, { duration: 200 });
+          translateX.value = withTiming(0, { duration: 200 });
+        }
+      });
+
+    const drag = Gesture.Pan()
+      .minPointers(zoomable && !cursor ? 1 : 2)
+      .onBegin(() => {
+        'worklet';
+        zoomActive.value = true;
+        savedTranslate.value = translateX.value;
+      })
+      .onUpdate((e) => {
+        'worklet';
+        translateX.value = clampTranslate(
+          savedTranslate.value + e.translationX,
+          scaleX.value,
+          plotWidth
+        );
+      })
+      .onEnd((e) => {
+        'worklet';
+        zoomActive.value = false;
+        if (!momentum || scaleX.value <= 1) return;
+        const maxTranslate = plotWidth * (scaleX.value - 1);
+        translateX.value = withDecay({
+          velocity: e.velocityX,
+          // Deceleration tuned to native scroll feel.
+          deceleration: 0.997,
+          clamp: [-maxTranslate, 0],
+          rubberBandEffect: true,
+          rubberBandFactor: 0.9,
+        });
+      });
+
+    const doubleTap = Gesture.Tap()
+      .numberOfTaps(2)
+      .onEnd(() => {
+        'worklet';
+        scaleX.value = withTiming(1, { duration: 400 });
+        translateX.value = withTiming(0, { duration: 400 });
+      });
+
+    return Gesture.Simultaneous(pinch, drag, doubleTap);
+  }, [
+    zoomable,
+    cursor,
+    maxZoom,
+    momentum,
+    plotWidth,
+    scaleX,
+    translateX,
+    zoomActive,
+    savedScale,
+    savedTranslate,
+  ]);
+
+  const activeGesture = useMemo(() => {
+    if (zoomable && cursor) return Gesture.Simultaneous(gesture, zoomGesture);
+    if (zoomable) return zoomGesture;
+    return gesture;
+  }, [zoomable, cursor, gesture, zoomGesture]);
+
   const ready = size.width > 0 && size.height > 0;
   const isEmpty = data.length === 0;
 
@@ -302,7 +421,9 @@ export function Chart({
     <Canvas style={StyleSheet.absoluteFill}>
       <ChartProvider value={contextValue}>
         <CursorProvider value={cursor ? cursorState : null}>
-          {children}
+          <ViewportProvider value={zoomable ? viewportState : null}>
+            {children}
+          </ViewportProvider>
         </CursorProvider>
       </ChartProvider>
     </Canvas>
@@ -312,8 +433,8 @@ export function Chart({
     <View style={[{ height }, styles.root, style]} onLayout={onLayout}>
       {ready && !isEmpty ? (
         <>
-          {cursor ? (
-            <GestureDetector gesture={gesture}>
+          {cursor || zoomable ? (
+            <GestureDetector gesture={activeGesture}>
               <View style={StyleSheet.absoluteFill}>{canvas}</View>
             </GestureDetector>
           ) : (

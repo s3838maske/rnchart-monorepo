@@ -80,6 +80,16 @@ export type { CrosshairProps } from './charts/interaction/Crosshair';
 export { Tooltip } from './charts/interaction/Tooltip';
 export type { TooltipProps } from './charts/interaction/Tooltip';
 
+export { ZoomPan } from './charts/interaction/ZoomPan';
+export type { ZoomPanProps } from './charts/interaction/ZoomPan';
+
+export {
+  clampTranslate,
+  useViewport,
+  zoomAboutFocal,
+} from './charts/interaction/viewport';
+export type { ViewportState } from './charts/interaction/viewport';
+
 export { nearestIndexByX, useCursor } from './charts/interaction/cursorState';
 export type { CursorState } from './charts/interaction/cursorState';
 
@@ -109,6 +119,14 @@ export type {
 
 export { useChartAnimation } from './charts/theme/useChartAnimation';
 export type { ChartAnimation } from './charts/theme/useChartAnimation';
+
+export { SeriesGradient, resolveGradient } from './charts/gradient';
+export type {
+  GradientFrame,
+  GradientInput,
+  GradientKind,
+  GradientSpec,
+} from './charts/gradient';
 
 export { SERIES_COLORS, seriesColorAt, withAlpha } from './charts/colors';
 

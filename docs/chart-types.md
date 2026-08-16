@@ -113,3 +113,64 @@ not the default.
 Every policy returns a parallel `Uint8Array` validity mask, so a genuine zero
 stays distinguishable from a hole — under `zero` they look identical in the
 values alone.
+
+## Gradients
+
+Every series takes the same `gradient` prop. Three forms, shortest first:
+
+```tsx
+<Area seriesKey="revenue" gradient />                        {/* series colour → transparent */}
+<Bar  seriesKey="revenue" gradient={['#8b5cf6', '#06b6d4']} /> {/* colour array */}
+<Radar
+  seriesKey="alpha"
+  gradient={{
+    type: 'radial',
+    colors: ['rgba(139,92,246,0.05)', 'rgba(59,130,246,0.45)', 'rgba(6,182,212,0.75)'],
+    positions: [0, 0.55, 1],
+  }}
+/>
+```
+
+| Field | Notes |
+| --- | --- |
+| `type` | `linear` (default), `radial`, `sweep` |
+| `colors` | Two or more stops. Use `rgba()` to control alpha per stop. |
+| `positions` | 0 to 1, same length as `colors` |
+| `direction` | `vertical` (default) or `horizontal`. Linear only. |
+| `opacity` | Multiplies every stop's alpha |
+
+**Which type suits which chart.** `radial` reads best on a radar, because it
+runs centre-outward and that is how the eye already reads distance from the
+middle as magnitude. `linear` vertical suits area and column fills. `sweep`
+suits gauges, where the ramp should follow the arc.
+
+The gradient spec is plain data, not a Skia node, because the series knows its
+own geometry and you do not — a radar supplies the bounding circle, a column
+chart supplies the plot rect. You describe the ramp; the series supplies the
+frame.
+
+## Pan and zoom
+
+```tsx
+<Chart data={data} xKey="month" yKeys={['revenue']} zoomable>
+  <Grid />
+  <YAxis />
+  <XAxis />
+  <ZoomPan>
+    <Line seriesKey="revenue" />
+  </ZoomPan>
+</Chart>
+```
+
+Put the series inside `<ZoomPan>` and leave the grid and axes outside — the
+grid should not stretch with the data.
+
+| Prop | Default | Notes |
+| --- | --- | --- |
+| `zoomable` | `false` | Enables pinch, pan and double-tap-to-reset |
+| `maxZoom` | `8` | |
+| `momentum` | `true` | Flick carries with decay and rubber-bands at the edges |
+
+Pinch anchors at the **focal point between your fingers**, not the plot centre.
+Centre-anchoring makes content slide out from under the fingers, which reads as
+the chart fighting you.

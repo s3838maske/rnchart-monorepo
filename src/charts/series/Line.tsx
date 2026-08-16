@@ -4,7 +4,12 @@ import { Circle, Group, Path, Skia } from '@shopify/react-native-skia';
 import type { SkPath } from '@shopify/react-native-skia';
 import { monotoneTangents } from '../../core';
 
+import { useDerivedValue } from 'react-native-reanimated';
+
 import { useChart } from '../ChartContext';
+import { useViewport } from '../interaction/viewport';
+import { SeriesGradient, resolveGradient } from '../gradient';
+import type { GradientInput } from '../gradient';
 
 export type CurveKind = 'linear' | 'monotone' | 'step' | 'stepAfter';
 
@@ -17,6 +22,8 @@ export type LineProps = {
   /** Draw across gaps instead of breaking the line. */
   readonly connectNulls?: boolean;
   readonly markers?: boolean | { readonly size?: number };
+  /** Gradient STROKE. `true`, a colour array, or a full spec. */
+  readonly gradient?: GradientInput;
 };
 
 type Points = { readonly xs: Float32Array; readonly ys: Float32Array };
@@ -158,10 +165,22 @@ export function Line({
   opacity = 1,
   connectNulls = false,
   markers = false,
+  gradient,
 }: LineProps): ReactElement {
-  const { colorFor } = useChart();
+  const { colorFor, plotArea } = useChart();
   const { points, valid } = useSeriesPoints(seriesKey);
   const stroke = color ?? colorFor(seriesKey);
+  // A stroke gradient defaults to HORIZONTAL: running it vertically on a line
+  // fades the stroke by height, which reads as an artefact rather than intent.
+  const gradientSpec = resolveGradient(gradient, stroke);
+  const viewport = useViewport();
+
+  // A horizontal group scale stretches stroke geometry too, so divide the
+  // width back out. Without this a 4x zoom draws a 10px line.
+  const compensatedWidth = useDerivedValue(
+    () => strokeWidth / Math.max(1, viewport?.scaleX.value ?? 1),
+    [viewport, strokeWidth]
+  );
 
   const path = useMemo(
     () => buildLinePath(points, valid, curve, connectNulls),
@@ -188,12 +207,19 @@ export function Line({
       <Path
         path={path}
         style="stroke"
-        strokeWidth={strokeWidth}
+        strokeWidth={compensatedWidth}
         strokeCap="round"
         strokeJoin="round"
         color={stroke}
         opacity={opacity}
-      />
+      >
+        {gradientSpec !== null ? (
+          <SeriesGradient
+            spec={{ direction: 'horizontal', ...gradientSpec }}
+            frame={plotArea}
+          />
+        ) : null}
+      </Path>
       {showMarkers
         ? Array.from({ length: points.xs.length }, (_, i) =>
             valid[i] === 1 ? (

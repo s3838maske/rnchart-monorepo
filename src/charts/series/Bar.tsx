@@ -3,6 +3,8 @@ import type { ReactElement } from 'react';
 import { Path, Skia } from '@shopify/react-native-skia';
 
 import { useChart } from '../ChartContext';
+import { SeriesGradient, resolveGradient } from '../gradient';
+import type { GradientInput } from '../gradient';
 
 export type BarProps = {
   readonly seriesKey?: string;
@@ -14,6 +16,8 @@ export type BarProps = {
   readonly barPadding?: number;
   /** Minimum visible height so near-zero values do not vanish. */
   readonly minBarLength?: number;
+  /** Gradient fill. `true`, a colour array, or a full spec. */
+  readonly gradient?: GradientInput;
 };
 
 /**
@@ -35,6 +39,7 @@ export function Bar({
   cornerRadius = 4,
   barPadding = 0.15,
   minBarLength = 2,
+  gradient,
 }: BarProps): ReactElement {
   const {
     yKeys,
@@ -134,9 +139,16 @@ export function Bar({
 
   return (
     <>
-      {paths.map((p) => (
-        <Path key={p.key} path={p.path} style="fill" color={p.color} />
-      ))}
+      {paths.map((p) => {
+        const spec = resolveGradient(gradient, p.color);
+        return (
+          <Path key={p.key} path={p.path} style="fill" color={p.color}>
+            {spec !== null ? (
+              <SeriesGradient spec={spec} frame={plotArea} />
+            ) : null}
+          </Path>
+        );
+      })}
     </>
   );
 }
