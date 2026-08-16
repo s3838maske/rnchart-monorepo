@@ -92,6 +92,6 @@ development builds to a `lib/` directory that does not exist before a build. See
 `example/metro.config.js`.
 
 **The core-purity rule is enforced, not documented.** `eslint.config.mjs` fails
-the build if anything under `packages/core` imports react, react-native, a
+the build if anything under `src/core` imports react, react-native, a
 `react-native-*` package, or Skia. This is the v0.1.0 exit criterion, and it is
 the single assumption every later version rests on.

@@ -3,9 +3,19 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
-## [0.4.0] — unreleased
+## [1.0.0] — 2026-08-17
 
-Completes the v1 line of the roadmap: phases 22 through 27.
+**First stable release.** All 27 phases of the v1 roadmap are complete:
+cartesian and polar series, interaction, streaming, drilldown, annotations,
+statistical series and a screen-reader layer.
+
+Semver applies from here. Breaking changes to the public API mean 2.0.0 —
+which is where the plugin architecture and the remaining roadmap phases
+(28–41) are headed.
+
+Supersedes 0.2.0 and 0.3.0, which were tagged in git but never published.
+
+Includes phases 22 through 27:
 
 ### Added — annotations (v1.2.0)
 
@@ -77,7 +87,7 @@ Every one of these passed typecheck, lint and the full unit suite.
   nature — competing with 20 other suites for CPU — and a randomly failing
   test trains people to re-run until green. `yarn bench` measures properly.
 
-## [0.2.0] — unreleased
+## [0.2.0] — never published
 
 v1.1.0 of the roadmap: polar and radial charts.
 
@@ -105,9 +115,9 @@ v1.1.0 of the roadmap: polar and radial charts.
   computed from individual values rather than stacked totals. `<PolarChart>`
   now takes a `stacked` prop that scales the radius to per-category sums.
 
-## [0.1.0] — unreleased
+## [0.1.0] — 2026-08-14
 
-First release. Pre-1.0 while the public API settles.
+First release to npm. Phases 1 through 15.
 
 ### Added
 

@@ -15,10 +15,10 @@
 
 <p align="center"><em>Real captures from the Android emulator and the iOS simulator — same source, same pixels.</em></p>
 
-> **Status: pre-release.** Phases 1–14 of a 41-phase roadmap are complete. The
-> library renders line, area, column, scatter, bubble, pie and donut charts with
-> a touch cursor, crosshair, tooltip, legend and theme system. It is **not yet
-> published to npm**. See [What's not done](#whats-not-done) before adopting.
+> **Status: 1.0.0.** All 27 phases of the v1 roadmap are complete — cartesian
+> and polar series, interaction, streaming, drilldown, annotations, statistical
+> series and a screen-reader layer. Semver applies from here: breaking API
+> changes mean 2.0.0. See [What's not done](#whats-not-done) before adopting.
 
 ## Install
 
@@ -80,13 +80,25 @@ Add a touch cursor with a tooltip:
 | Scatter — circle, square, diamond | ✅ |
 | Bubble — sqrt radius so **area** encodes magnitude | ✅ |
 | Pie, donut, semi-circle, arbitrary angles | ✅ |
+| Radar — with `independentAxes` per spoke | ✅ |
+| Wind rose — stacked polar columns | ✅ |
+| Gauge and activity rings | ✅ |
+| Area range, dumbbell, error bars | ✅ |
+| Box plot — tukey/minmax/stddev whiskers, notches, outliers | ✅ |
+| Waterfall, histogram, pareto, bell curve | ✅ |
+| Streaming — ring-buffered, 60 appends/sec without a re-render | ✅ |
 
 | Feature | Status |
 | --- | --- |
 | Axes, grid, smart ticks, label collision resolution | ✅ |
 | Touch cursor, crosshair, tooltip, haptics — all on the UI thread | ✅ |
+| Pinch-zoom and pan with momentum and rubber-banding | ✅ |
+| Drilldown with breadcrumbs and Android back handling | ✅ |
+| Plot lines, plot bands and callout annotations | ✅ |
+| Screen-reader layer, data table, pattern fills | ✅ |
+| Gradients — linear, radial, sweep — on any series | ✅ |
 | Legend with tap-to-toggle | ✅ |
-| Theme system, light/dark, three verified palettes | ✅ |
+| Theme system, light/dark, three CVD-verified palettes | ✅ |
 | Decimation (LTTB, min/max) and hit-testing | ✅ |
 | Missing-data policies — `gap`, `connect`, `zero` | ✅ |
 
@@ -166,15 +178,15 @@ merely intended.
 
 Being explicit, because a feature table that hides gaps costs more trust than it buys:
 
-- **Not published to npm.** Install instructions above will not work yet.
-- **No device benchmarks.** Only Node numbers exist.
+- **No device benchmarks.** Only Node numbers exist. Everything is verified on
+  the Android emulator and the iOS simulator, not on physical hardware.
+- **The screen-reader layer has not had a real VoiceOver/TalkBack listening
+  pass.** The accessibility trees were dumped and checked on both platforms —
+  labels, values and traversal order are correct — but reading a tree is not
+  the same as navigating one.
 - **No screenshot regression tests.** See [docs/screenshot-testing.md](docs/screenshot-testing.md) for why the tool the roadmap named is not usable.
-- **No accessibility layer.** Screen-reader support is phase 26.
-- **No pan/zoom, streaming, drilldown or annotations** (v1.2.0).
-- **No polar, radar or gauges** (v1.1.0).
-- **No box plots, waterfall or histogram** (v1.3.0).
 - **No plugin architecture or Highcharts adapter** (v2.0.0).
-- **No financial module, heatmaps, treemaps, maps or Gantt.**
+- **No financial module, heatmaps, treemaps, maps, Gantt or web renderer** — roadmap phases 28–41.
 - **Pie and scatter are partial** — no slice explode, connector labels, quadtree-backed tap targets or trend lines yet.
 
 ## Development
