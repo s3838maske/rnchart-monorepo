@@ -1,0 +1,8 @@
+node_modules/
+lib/
+coverage/
+.expo/
+.yarn/
+android/
+ios/
+*.md

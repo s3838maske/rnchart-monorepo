@@ -1,0 +1,75 @@
+{
+  "name": "@rnchart/core",
+  "version": "0.1.0",
+  "description": "Renderer-agnostic charting maths for @rnchart. Pure TypeScript, runs in plain Node.",
+  "license": "MIT",
+  "sideEffects": false,
+  "source": "./src/index.ts",
+  "main": "./lib/commonjs/index.js",
+  "module": "./lib/module/index.js",
+  "types": "./lib/typescript/commonjs/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./lib/typescript/module/index.d.ts",
+        "default": "./lib/module/index.js"
+      },
+      "require": {
+        "types": "./lib/typescript/commonjs/index.d.ts",
+        "default": "./lib/commonjs/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "lib",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
+    "!**/*.test.ts"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "bob build",
+    "clean": "del-cli lib",
+    "test": "jest"
+  },
+  "keywords": [
+    "react-native",
+    "charts",
+    "skia",
+    "visualization"
+  ],
+  "react-native-builder-bob": {
+    "source": "src",
+    "output": "lib",
+    "targets": [
+      [
+        "commonjs",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "module",
+        {
+          "esm": true
+        }
+      ],
+      [
+        "typescript",
+        {
+          "project": "tsconfig.build.json"
+        }
+      ]
+    ],
+    "exclude": "**/{__tests__/**,__fixtures__/**,__mocks__/**,*.test.*}"
+  }
+}

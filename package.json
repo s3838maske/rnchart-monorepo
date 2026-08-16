@@ -1,0 +1,52 @@
+{
+  "name": "rnchart-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo root for @rnchart — a Skia-powered charting library for React Native.",
+  "license": "MIT",
+  "packageManager": "yarn@4.18.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "packages/*",
+    "example"
+  ],
+  "scripts": {
+    "build": "yarn workspace @rnchart/core run build && yarn workspace @rnchart/skia run build && yarn workspace @rnchart/charts run build",
+    "clean": "yarn workspace @rnchart/core run clean && yarn workspace @rnchart/skia run clean && yarn workspace @rnchart/charts run clean",
+    "test": "yarn workspace @rnchart/core run test && yarn workspace @rnchart/skia run test && yarn workspace @rnchart/charts run test",
+    "test:coverage": "yarn workspace @rnchart/core run test --coverage",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "example": "yarn workspace rnchart-example run start",
+    "example:ios": "yarn workspace rnchart-example run ios",
+    "example:android": "yarn workspace rnchart-example run android",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "yarn build && changeset publish"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.2",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
+    "@changesets/cli": "^3.0.0",
+    "@eslint/js": "^10.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/react": "^19.2.18",
+    "babel-jest": "^29.7.0",
+    "del-cli": "^7.0.0",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.11.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.9.6",
+    "react-native-builder-bob": "^0.43.0",
+    "typescript": "5.9.3",
+    "typescript-eslint": "^8.67.0"
+  }
+}

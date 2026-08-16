@@ -1,0 +1,42 @@
+# dependencies
+node_modules/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+.pnp.*
+
+# build output
+lib/
+*.tsbuildinfo
+coverage/
+
+# react native / expo
+.expo/
+dist/
+web-build/
+android/
+ios/
+*.keystore
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# metro
+.metro-health-check*
+haste-map-*
+
+# misc
+.DS_Store
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.env
+.env.local
+.idea/
+.vscode/

@@ -1,0 +1,11 @@
+module.exports = function (api) {
+  api.cache(true);
+  return {
+    presets: ['babel-preset-expo'],
+    plugins: [
+      // Reanimated 4 moved the worklet transform into react-native-worklets.
+      // This must stay last in the plugin list.
+      'react-native-worklets/plugin',
+    ],
+  };
+};

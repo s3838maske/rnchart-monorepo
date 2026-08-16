@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "noEmit": false
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "lib",
+    "src/**/__tests__/**",
+    "src/**/__fixtures__/**",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
+}

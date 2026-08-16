@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "rnchart example",
+    "slug": "rnchart-example",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "dev.rnchart.example",
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "dev.rnchart.example",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": ["expo-dev-client"]
+  }
+}
