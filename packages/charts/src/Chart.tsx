@@ -90,7 +90,7 @@ export function Chart({
   animate = true,
   emptyMessage = 'No data',
   cursor = false,
-  haptics = false,
+  haptics = true,
   overlay,
   children,
 }: ChartProps): ReactElement {

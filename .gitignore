@@ -40,3 +40,6 @@ yarn-error.*
 .env.local
 .idea/
 .vscode/
+
+# generated API reference (yarn docs:api)
+docs/api/

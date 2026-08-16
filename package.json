@@ -29,7 +29,9 @@
     "version": "changeset version",
     "release": "yarn build && changeset publish",
     "size": "size-limit",
-    "size:why": "size-limit --why"
+    "size:why": "size-limit --why",
+    "prepublish:check": "node scripts/prepublish-check.mjs",
+    "docs:api": "typedoc"
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
@@ -50,6 +52,8 @@
     "prettier": "^3.9.6",
     "react-native-builder-bob": "^0.43.0",
     "size-limit": "^13.0.3",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.12.0",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.67.0"
   }

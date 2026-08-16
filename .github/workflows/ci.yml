@@ -52,10 +52,7 @@ jobs:
       - name: Bundle size budgets
         run: yarn size
 
-      - name: Verify published package contents
+      # Runs every release gate: manifests, peer-range width, tarball contents.
+      - name: Pre-publish verification
         if: matrix.node == 22
-        run: |
-          for pkg in core skia charts; do
-            echo "--- @rnchart/$pkg ---"
-            ( cd "packages/$pkg" && npm pack --dry-run )
-          done
+        run: yarn prepublish:check

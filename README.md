@@ -1,115 +1,207 @@
 # @rnchart
 
-Skia-powered charts for React Native. Native performance, no WebView, one API
-for iOS and Android.
+**Skia-powered charts for React Native. Native performance, no WebView, one API for iOS and Android.**
 
-> **Status: phase 1 of 41.** Nothing renders yet. This repository currently
-> contains the monorepo scaffold and the architectural boundary that everything
-> else depends on. The first chart appears in phase 7; the first public release
-> is v1.0.0 at phase 15.
+<p align="center">
+  <img src="docs/assets/ios-cartesian.png" width="30%" alt="Line and area charts on iOS" />
+  <img src="docs/assets/android-cartesian.png" width="30%" alt="The same charts on Android" />
+  <img src="docs/assets/android-pie.png" width="30%" alt="Donut, pie and semi-circle" />
+</p>
+<p align="center">
+  <img src="docs/assets/android-bar-missing.png" width="30%" alt="Grouped columns and missing-data handling" />
+  <img src="docs/assets/android-legend.png" width="30%" alt="Legend" />
+  <img src="docs/assets/android-legend-toggled.png" width="30%" alt="Toggling a series rescales the domain" />
+</p>
+
+<p align="center"><em>Real captures from the Android emulator and the iOS simulator — same source, same pixels.</em></p>
+
+> **Status: pre-release.** Phases 1–14 of a 41-phase roadmap are complete. The
+> library renders line, area, column, scatter, bubble, pie and donut charts with
+> a touch cursor, crosshair, tooltip, legend and theme system. It is **not yet
+> published to npm**. See [What's not done](#whats-not-done) before adopting.
+
+## Install
+
+```sh
+npm install @rnchart/charts @rnchart/core @rnchart/skia
+```
+
+Peer dependencies you must already have:
+
+```sh
+npx expo install @shopify/react-native-skia react-native-reanimated react-native-worklets react-native-gesture-handler
+```
+
+Skia does not run in Expo Go — you need a [development build](https://docs.expo.dev/develop/development-builds/introduction/).
+
+## Your first chart
+
+```tsx
+import { Area, Chart, Grid, XAxis, YAxis } from '@rnchart/charts';
+
+const data = [
+  { month: 'Jan', revenue: 210 },
+  { month: 'Feb', revenue: 340 },
+  { month: 'Mar', revenue: 180 },
+  { month: 'Apr', revenue: 420 },
+];
+
+export function Revenue() {
+  return (
+    <Chart data={data} xKey="month" yKeys={['revenue']} height={220}>
+      <Grid />
+      <YAxis />
+      <XAxis />
+      <Area seriesKey="revenue" />
+    </Chart>
+  );
+}
+```
+
+Add a touch cursor with a tooltip:
+
+```tsx
+<Chart data={data} xKey="month" yKeys={['revenue']} cursor haptics overlay={<Tooltip />}>
+  <Grid />
+  <YAxis />
+  <XAxis />
+  <Area seriesKey="revenue" />
+  <Crosshair />
+</Chart>
+```
+
+## What it does today
+
+| Series | Status |
+| --- | --- |
+| Line — linear, monotone, step, stepAfter | ✅ |
+| Area — eased gradient fill, configurable baseline | ✅ |
+| Column — grouped, rounded outer corners, `minBarLength` | ✅ |
+| Scatter — circle, square, diamond | ✅ |
+| Bubble — sqrt radius so **area** encodes magnitude | ✅ |
+| Pie, donut, semi-circle, arbitrary angles | ✅ |
+
+| Feature | Status |
+| --- | --- |
+| Axes, grid, smart ticks, label collision resolution | ✅ |
+| Touch cursor, crosshair, tooltip, haptics — all on the UI thread | ✅ |
+| Legend with tap-to-toggle | ✅ |
+| Theme system, light/dark, three verified palettes | ✅ |
+| Decimation (LTTB, min/max) and hit-testing | ✅ |
+| Missing-data policies — `gap`, `connect`, `zero` | ✅ |
+
+## Why not react-native-svg?
+
+An SVG chart creates one native view per element. A 500-point line is 500 views
+that React must reconcile and the platform must lay out, every update. Skia
+draws the same line as a single path into one canvas.
+
+That difference is why this library batches aggressively: every grid line of one
+orientation is a single `SkPath`, every bar of a series is a single `SkPath`,
+every scatter point of a series is a single `SkPath`. At 200 bars that is the
+difference between one draw call and two hundred.
+
+## Honest comparison
+
+| | @rnchart | gifted-charts | victory-native XL | chart-kit |
+| --- | --- | --- | --- | --- |
+| Renderer | Skia | react-native-svg | Skia | react-native-svg |
+| Chart types | 7 today | ~15 | ~8 | ~6 |
+| Web support | Planned (v3) | No | No | No |
+| Maturity | **Pre-release** | Mature | Mature | Mature, low activity |
+| Bundle (charts, gzipped) | ~42 kB | — | — | — |
+
+**Use gifted-charts today** if you want breadth and stability right now — it has
+far more chart types and years of production use. **Use victory-native XL** if
+you want a Skia renderer from a maintained project with a real user base.
+This library is younger than both; its bets are the pure-TypeScript core (which
+makes a web renderer an adapter rather than a rewrite) and interaction that never
+touches the JS thread.
+
+## Performance
+
+Measured in Node on an Apple Silicon laptop. **These are not device numbers** —
+device benchmarks in release builds on a mid-range Android phone are still
+outstanding, and publishing laptop numbers as device numbers is how benchmark
+tables lose their credibility.
+
+| Operation | Measured | Roadmap target |
+| --- | --- | --- |
+| LTTB, 100k → 800 points | 0.32 ms | < 15 ms |
+| Hit-test (x mode), 100k points | 0.0002 ms | < 0.1 ms |
+| `clipToViewport`, 1M points | 0.0001 ms | — constant, proving it returns a view not a copy |
+| Quadtree build, 50k points | 6.4 ms | once per data change, not per frame |
+
+Run them yourself: `yarn bench`.
 
 ## Packages
 
 | Package | What it is |
 | --- | --- |
-| `@rnchart/core` | Renderer-agnostic charting maths. Pure TypeScript, zero React Native, runs in plain Node. |
-| `@rnchart/skia` | Skia renderer adapter. Bridges core geometry to Skia draw calls. |
-| `@rnchart/charts` | The public API — the components consumers import. |
-| `example/` | Expo dev-client app used for visual verification. Not published. |
+| [`@rnchart/core`](packages/core) | Renderer-agnostic maths. Pure TypeScript, zero React Native, runs in plain Node. |
+| [`@rnchart/skia`](packages/skia) | Skia renderer adapter. |
+| [`@rnchart/charts`](packages/charts) | The public API. |
 
-`@rnchart/core` having no React Native dependency is not a stylistic
-preference. Every renderer — Skia today, the web renderer in v3.0.0 — is an
-adapter over it. It is why phase 39 is a few weeks of adapter work rather than a
-rewrite, and it is why victory-native had to abandon web parity when it moved to
-Skia. A lint rule fails the build if anything in `packages/core` imports React
-Native.
+`@rnchart/core` having no React Native dependency is not a style choice. Every
+renderer is an adapter over it, which is why the planned web renderer is adapter
+work rather than a rewrite — and why victory-native had to drop web parity when
+it moved to Skia. A lint rule fails the build if anything in `packages/core`
+imports React Native.
 
-## Setup
+## Documentation
 
-Requires **Node 20+**. Yarn 4 comes from Corepack, which ships with Node.
+- [Getting started](docs/getting-started.md)
+- [Chart types](docs/chart-types.md)
+- [Interaction](docs/interaction.md)
+- [Theming](docs/theming.md)
+- [Performance](docs/performance.md)
+- [Why not SVG?](docs/why-not-svg.md)
+- [Architecture](CONTEXT.md)
+
+## What's not done
+
+Being explicit, because a feature table that hides gaps costs more trust than it buys:
+
+- **Not published to npm.** Install instructions above will not work yet.
+- **No device benchmarks.** Only Node numbers exist.
+- **No screenshot regression tests.** See [docs/screenshot-testing.md](docs/screenshot-testing.md) for why the tool the roadmap named is not usable.
+- **No accessibility layer.** Screen-reader support is phase 26.
+- **No pan/zoom, streaming, drilldown or annotations** (v1.2.0).
+- **No polar, radar or gauges** (v1.1.0).
+- **No box plots, waterfall or histogram** (v1.3.0).
+- **No plugin architecture or Highcharts adapter** (v2.0.0).
+- **No financial module, heatmaps, treemaps, maps or Gantt.**
+- **Pie and scatter are partial** — no slice explode, connector labels, quadtree-backed tap targets or trend lines yet.
+
+## Development
+
+Requires **Node 20+**. Yarn 4 comes from Corepack.
 
 ```sh
 corepack enable
 yarn install
+yarn build && yarn test && yarn lint && yarn typecheck
 ```
 
-Then verify the whole repo:
+Run the example app (needs a dev client — Skia does not run in Expo Go):
 
 ```sh
-yarn build      # compile all three packages with builder-bob
-yarn test       # jest, per package
-yarn lint       # eslint, including the core-purity rule
-yarn typecheck  # tsc --noEmit across packages and the example app
+yarn example:ios       # or yarn example:android
+yarn example           # fast loop once a dev client is installed
 ```
 
-## Running the example app
-
-Skia does not run in Expo Go, so the example needs a dev client. That means a
-native build — the first one takes a while.
-
-```sh
-yarn example:ios       # or: yarn example:android
-```
-
-Once a dev client is installed on the device, the fast loop is:
-
-```sh
-yarn example           # expo start --dev-client
-```
-
-Metro is configured to resolve `@rnchart/*` to workspace **source**, so editing
-`packages/*/src` hot-reloads the app with no rebuild.
-
-## Scripts
+Metro resolves `@rnchart/*` to workspace source, so editing `packages/*/src`
+hot-reloads the app with no rebuild.
 
 | Script | Does |
 | --- | --- |
 | `yarn build` | Builds core, then skia, then charts. Order matters. |
-| `yarn test` | Runs each package's Jest suite. |
-| `yarn test:coverage` | Coverage for `@rnchart/core` (thresholds enforced at 90%). |
-| `yarn lint` / `yarn lint:fix` | ESLint across the repo. |
-| `yarn typecheck` | Whole-repo type check, including `example/`. |
-| `yarn format` / `yarn format:check` | Prettier. |
-| `yarn size` | Checks bundle size budgets (requires a build first). |
-| `yarn size:why` | Explains what is contributing to a package's size. |
-| `yarn clean` | Removes `lib/` from every package. |
-| `yarn changeset` | Records a version bump. All three packages move in lockstep. |
-| `yarn release` | Builds, then publishes via changesets. |
-
-Run these from the repository root. Individual package scripts resolve their
-binaries through the root workspace.
-
-## Working on this
-
-Read [`CONTEXT.md`](./CONTEXT.md) first. It holds the global context block to
-paste at the start of an AI session, and — more importantly — the list of places
-where the roadmap PDF is out of date relative to the current dependency
-versions. Pasting the roadmap's original block will generate Reanimated 3 code
-that does not compile against Reanimated 4.
-
-The phase discipline from the roadmap is worth keeping:
-
-- Run each phase's acceptance test on a **real device**, not a simulator, before
-  moving on.
-- Do not run two phases in parallel.
-- Do not reorder phases within a version. Later phases assume earlier ones.
-
-## Definition of done
-
-A phase is finished when every line is true, not when the code runs:
-
-- [ ] TypeScript strict, zero `any`, zero `@ts-ignore`
-- [ ] Unit tests for all core logic, >85% coverage on the package
-- [ ] Screenshot regression tests for every new visual output, iOS and Android
-- [ ] An example app screen demonstrating every new prop
-- [ ] TSDoc on every exported symbol
-- [ ] A documentation page with at least one live Snack embed
-- [ ] Benchmarked against the target, with the number recorded
-- [ ] Accessibility: summary, per-point labels, reduced motion respected
-- [ ] No new direct dependency without written justification
-- [ ] Bundle size delta measured and within budget (`yarn size`)
-- [ ] Tested on a low-end Android device, not only a simulator
-- [ ] Changeset written in consumer-facing terms
+| `yarn test` | Jest, per package. |
+| `yarn bench` | Core performance benchmarks. |
+| `yarn size` | Bundle budgets (needs a build first). |
+| `yarn lint` / `yarn typecheck` / `yarn format` | Quality gates. |
+| `yarn changeset` | Record a version bump. |
+| `yarn prepublish:check` | Verifies everything before a release. |
 
 ## Licence
 
