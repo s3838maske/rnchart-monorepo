@@ -52,22 +52,24 @@ module.exports = [
     // is worth watching rather than assuming there is room.
     name: '@rnchart/core (full)',
     path: 'packages/core/lib/module/index.js',
-    limit: '18 kB',
+    limit: '20 kB',
     gzip: true,
   },
   {
-    // Phase 1 actual: 82 B. Rises in phase 5 with the real Skia adapter.
+    // Phase 1: 82 B. Phase 5: 670 B — measureText cache and the font hook.
     name: '@rnchart/skia (full)',
     path: 'packages/skia/lib/module/index.js',
-    limit: '1 kB',
+    limit: '2 kB',
     gzip: true,
     ignore: RN_PEERS,
   },
   {
-    // Phase 1 actual: 551 B. Rises steadily across phases 5-15.
+    // Phase 1: 551 B. Phases 5-11: 23.74 kB — Chart shell, axes, grid and the
+    // five series. The jump is this package finally containing a renderer
+    // rather than a placeholder. Watch it against the 140 kB v1.0.0 ceiling.
     name: '@rnchart/charts (full)',
     path: 'packages/charts/lib/module/index.js',
-    limit: '2 kB',
+    limit: '28 kB',
     gzip: true,
     ignore: RN_PEERS,
   },

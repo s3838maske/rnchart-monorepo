@@ -3205,6 +3205,8 @@ __metadata:
   resolution: "@rnchart/skia@workspace:packages/skia"
   dependencies:
     "@babel/core": "npm:^7.29.7"
+    "@react-native/babel-preset": "npm:0.86.2"
+    "@react-native/jest-preset": "npm:0.86.2"
     "@react-native/metro-config": "npm:0.86.2"
     "@rnchart/core": "workspace:^"
     "@shopify/react-native-skia": "npm:2.6.2"

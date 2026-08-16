@@ -1,11 +1,38 @@
 /**
  * @rnchart/charts — the public API consumers import.
  *
- * Phase 1 exports a placeholder so the example app has something to render.
- * The real surface — `<Chart>`, axes, series, tooltip, theming — arrives across
- * phases 5 to 15.
+ * Phases 5-11: the `<Chart>` shell, axes and grid, and the cartesian series
+ * (line, area, bar, scatter) plus pie. Tooltip, legend and the theme system
+ * follow in phases 12-14.
  */
 
 export { VERSION } from './version';
+
+export { Chart } from './Chart';
+export type { ChartProps, XScaleKind } from './Chart';
+
+export { useChart } from './ChartContext';
+export type { ChartContextValue, SeriesDatum } from './ChartContext';
+
+export { Grid, XAxis, YAxis } from './axis/Axes';
+export type { AxisProps, GridProps } from './axis/Axes';
+
+export { Line } from './series/Line';
+export type { CurveKind, LineProps } from './series/Line';
+
+export { Area } from './series/Area';
+export type { AreaProps } from './series/Area';
+
+export { Bar } from './series/Bar';
+export type { BarProps } from './series/Bar';
+
+export { Scatter } from './series/Scatter';
+export type { ScatterProps, ScatterShape } from './series/Scatter';
+
+export { PieChart } from './series/Pie';
+export type { PieChartProps } from './series/Pie';
+
+export { SERIES_COLORS, seriesColorAt, withAlpha } from './theme';
+
 export { Placeholder } from './Placeholder';
 export type { PlaceholderProps } from './Placeholder';

@@ -51,6 +51,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.29.7",
+    "@react-native/babel-preset": "0.86.2",
+    "@react-native/jest-preset": "0.86.2",
     "@react-native/metro-config": "0.86.2",
     "@shopify/react-native-skia": "2.6.2",
     "react": "19.2.3",

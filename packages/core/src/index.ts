@@ -11,6 +11,36 @@ export const VERSION = '0.1.0';
 export type { Rect, Size } from './geometry';
 export { clamp, createRect } from './geometry';
 
+export { computeArcs, monotoneTangents } from './curve';
+export type { Arc, ArcOptions } from './curve';
+
+export {
+  formatValue,
+  generateTicks,
+  resolveCollisions,
+  solveLayout,
+} from './layout';
+
+export type {
+  AxisInput,
+  AxisPlacement,
+  AxisScaleSpec,
+  CollisionOptions,
+  CollisionStrategy,
+  FormatSpec,
+  FormatType,
+  LabelledTick,
+  Layout,
+  LayoutInput,
+  LegendInput,
+  MeasureText,
+  Padding,
+  ResolvedTick,
+  SolvedAxis,
+  TickOptions,
+  TitleInput,
+} from './layout';
+
 export {
   applyStacking,
   computeDomain,

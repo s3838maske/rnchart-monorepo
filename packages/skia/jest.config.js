@@ -1,14 +1,29 @@
+/**
+ * @rnchart/skia imports react-native (Platform) and @shopify/react-native-skia,
+ * so it needs React Native's Jest preset and Babel preset — parts of RN's
+ * runtime are Flow-typed and the repo's root Babel config cannot parse them.
+ *
+ * d3-scale and friends are pure ESM and reach here through @rnchart/core.
+ */
 module.exports = {
-  testEnvironment: 'node',
+  preset: '@react-native/jest-preset',
   rootDir: '.',
   testMatch: ['<rootDir>/src/**/*.test.ts', '<rootDir>/src/**/*.test.tsx'],
   transform: {
-    '^.+\\.[jt]sx?$': ['babel-jest', { rootMode: 'upward' }],
+    '^.+\\.(js|jsx|ts|tsx)$': [
+      'babel-jest',
+      {
+        presets: ['@react-native/babel-preset'],
+        babelrc: false,
+        configFile: false,
+      },
+    ],
   },
-  // d3-scale and friends are pure ESM and reach here through @rnchart/core.
-  transformIgnorePatterns: ['node_modules/(?!(?:d3-[a-z0-9-]+|internmap)/)'],
-  // Test against workspace source, not built output, so `yarn test` does not
-  // require a prior `yarn build`.
+  transformIgnorePatterns: [
+    'node_modules/(?!(?:@react-native|react-native|@shopify/react-native-skia|react-native-reanimated|react-native-worklets|d3-[a-z0-9-]+|internmap)/)',
+  ],
+  // Skia ships a Jest setup that installs a JS mock of the native module.
+  setupFiles: ['@shopify/react-native-skia/jestSetup.js'],
   moduleNameMapper: {
     '^@rnchart/core$': '<rootDir>/../core/src/index.ts',
   },

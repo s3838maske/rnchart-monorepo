@@ -1,9 +1,9 @@
 /**
  * @rnchart/skia — the adapter between core geometry and Skia draw calls.
  *
- * Phase 1 ships only the seam. The real work — `measureText` injected into
- * core's layout solver, memoised Paint/Font/Path factories, `<PlotClip>` —
- * lands in phase 5.
+ * Everything renderer-specific lives here. `@rnchart/charts` composes these
+ * primitives; `@rnchart/core` knows nothing about any of it, which is what
+ * makes the phase 39 web renderer an adapter swap rather than a rewrite.
  */
 
 import { VERSION as CORE_VERSION } from '@rnchart/core';
@@ -16,13 +16,6 @@ export type RendererInfo = {
   readonly coreVersion: string;
 };
 
-/**
- * Reports which core this adapter is bound to.
- *
- * Its real job in phase 1 is to prove the workspace wiring end to end: if this
- * resolves, `@rnchart/skia` can see `@rnchart/core` in development (through the
- * path alias) and after publishing (through the built declarations).
- */
 export function rendererInfo(): RendererInfo {
   return {
     renderer: 'skia',
@@ -30,3 +23,7 @@ export function rendererInfo(): RendererInfo {
     coreVersion: CORE_VERSION,
   };
 }
+
+export { createMeasureText } from './measureText';
+export { useChartFont } from './useChartFont';
+export type { FontSpec, FontWeight } from './useChartFont';

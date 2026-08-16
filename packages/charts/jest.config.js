@@ -26,6 +26,8 @@ module.exports = {
   ],
   // Test against workspace source, not built output, so `yarn test` does not
   // require a prior `yarn build`.
+  // Skia ships a Jest setup that installs a JS mock of the native module.
+  setupFiles: ['@shopify/react-native-skia/jestSetup.js'],
   moduleNameMapper: {
     '^@rnchart/core$': '<rootDir>/../core/src/index.ts',
     '^@rnchart/skia$': '<rootDir>/../skia/src/index.ts',
