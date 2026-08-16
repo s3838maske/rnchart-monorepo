@@ -38,10 +38,21 @@ const RN_PEERS = [
 
 module.exports = [
   {
-    // Phase 1 actual: 127 B. Rises in phase 2 when d3-scale is added.
+    // Phase 1: 127 B. Phase 2: 15.82 kB — the scale engine's d3 dependencies.
+    //
+    // That jump is almost entirely transitive. Importing scaleLinear/scaleLog/
+    // scaleTime pulls d3-interpolate, d3-color, d3-format and d3-time-format
+    // along with them, and the two formatters are the bulk of it. The scale
+    // maths itself is small.
+    //
+    // Worth revisiting at phase 28: if time scales become an opt-in plugin
+    // rather than part of the core barrel, a chart that never plots a time
+    // axis stops paying for d3-time-format. Roughly 11% of the roadmap's
+    // 140 kB full-package budget is already committed here at phase 2, so this
+    // is worth watching rather than assuming there is room.
     name: '@rnchart/core (full)',
     path: 'packages/core/lib/module/index.js',
-    limit: '1 kB',
+    limit: '18 kB',
     gzip: true,
   },
   {

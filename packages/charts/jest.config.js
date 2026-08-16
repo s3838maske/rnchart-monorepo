@@ -22,7 +22,7 @@ module.exports = {
     ],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(?:@react-native|react-native|@shopify/react-native-skia|react-native-reanimated|react-native-worklets|react-native-gesture-handler)/)',
+    'node_modules/(?!(?:@react-native|react-native|@shopify/react-native-skia|react-native-reanimated|react-native-worklets|react-native-gesture-handler|d3-[a-z0-9-]+|internmap)/)',
   ],
   // Test against workspace source, not built output, so `yarn test` does not
   // require a prior `yarn build`.
