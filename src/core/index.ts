@@ -52,6 +52,9 @@ export type {
   ViewportSlice,
 } from './perf';
 
+export { createRingBuffer } from './stream';
+export type { RingBuffer, RingView } from './stream';
+
 export {
   categoryAngle,
   createCartesian,

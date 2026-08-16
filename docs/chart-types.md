@@ -174,3 +174,65 @@ grid should not stretch with the data.
 Pinch anchors at the **focal point between your fingers**, not the plot centre.
 Centre-anchoring makes content slide out from under the fingers, which reads as
 the chart fighting you.
+
+## Streaming
+
+The problem this solves is specific: appending points to an ordinary chart
+makes it **narrower and narrower** as the domain grows, instead of scrolling a
+fixed window. victory-native issue #251 is exactly this.
+
+```tsx
+const chart = useRef<StreamingChartRef>(null);
+
+useEffect(() => {
+  const id = setInterval(() => {
+    chart.current?.append({ x: Date.now(), y: readSensor() });
+  }, 16);
+  return () => clearInterval(id);
+}, []);
+
+<StreamingChart ref={chart} mode="scroll" capacity={240} height={160} />
+```
+
+| Mode | Behaviour |
+| --- | --- |
+| `scroll` | Window slides; newest sample at the right edge. The finance pattern. |
+| `sweep` | Fixed window overwritten left to right by a moving write head. The ECG pattern. |
+| `grow` | Fills the window, then behaves like `scroll`. |
+
+### How it avoids re-rendering
+
+```
+append()  →  ring buffer (fixed Float32Array, allocated once)
+          →  pixel coordinates into a SHARED VALUE
+          →  useDerivedValue rebuilds the SkPath on the UI THREAD
+```
+
+No `setState`, so React never reconciles. At 60 appends a second that is the
+difference between 60 reconciliations a second and none. Memory is flat: the
+ring buffer is allocated at construction and never grows, and `toView()` avoids
+copying unless the buffer has wrapped — and copies exactly once when it has.
+
+### A worklet trap worth knowing
+
+Do not capture a React **ref** inside a worklet. Reanimated freezes the object,
+every later write to `.current` is silently dropped, and you get:
+
+```
+[Worklets] Tried to modify key `current` of an object which has been
+already passed to a worklet.
+```
+
+This chart hit exactly that: the size ref froze at `{0, 0}`, so the publish step
+early-returned on every append and the chart rendered empty with no error. Use a
+**shared value** for anything a worklet reads.
+
+### Using the ring buffer directly
+
+```ts
+import { createRingBuffer } from 'react-native-graphify';
+
+const rb = createRingBuffer(1000, 2); // 1000 entries of [x, y]
+rb.push(x, y);
+const { view, copied, length } = rb.toView();
+```

@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
+import type { StreamingChartRef } from 'react-native-graphify';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -18,6 +19,7 @@ import {
   PolarGrid,
   Radar,
   Scatter,
+  StreamingChart,
   Tooltip,
   WindRose,
   ZoomPan,
@@ -79,6 +81,32 @@ const SCATTERED = Array.from({ length: 40 }, (_, i) => ({
   y: Math.round(50 + Math.sin(i / 3) * 30 + ((i * 37) % 23)),
   weight: ((i * 17) % 40) + 5,
 }));
+
+/**
+ * Simulated 60Hz sensor feed.
+ *
+ * Drives the chart entirely through its ref — this component never calls
+ * setState, so React does not reconcile on any of the 60 appends per second.
+ */
+function LiveFeed({ mode }: { mode: 'scroll' | 'sweep' }): ReactElement {
+  const chart = useRef<StreamingChartRef>(null);
+
+  useEffect(() => {
+    let t = 0;
+    const id = setInterval(() => {
+      t += 1;
+      const value =
+        Math.sin(t / 12) * 40 + Math.sin(t / 3.1) * 8 + (t % 97 === 0 ? 35 : 0);
+      chart.current?.append({ x: t, y: value });
+    }, 16);
+
+    return () => {
+      clearInterval(id);
+    };
+  }, []);
+
+  return <StreamingChart ref={chart} mode={mode} capacity={240} height={160} />;
+}
 
 function Section({
   title,
@@ -415,6 +443,20 @@ export default function App(): ReactElement {
               <Line seriesKey="revenue" markers />
             </ZoomPan>
           </Chart>
+        </Section>
+
+        <Section
+          title="Streaming — scroll"
+          caption="60 appends per second through a ref. No setState, so React never reconciles. Memory is flat: a fixed ring buffer, allocated once."
+        >
+          <LiveFeed mode="scroll" />
+        </Section>
+
+        <Section
+          title="Streaming — sweep"
+          caption="The ECG pattern: a fixed window overwritten left to right by a moving write head."
+        >
+          <LiveFeed mode="sweep" />
         </Section>
 
         <Section title="Donut" caption="Arc geometry computed in core.">

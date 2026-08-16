@@ -42,6 +42,14 @@ export type { ScatterProps, ScatterShape } from './charts/series/Scatter';
 export { PieChart } from './charts/series/Pie';
 export type { PieChartProps } from './charts/series/Pie';
 
+export { StreamingChart } from './charts/StreamingChart';
+export type {
+  StreamMode,
+  StreamPoint,
+  StreamingChartProps,
+  StreamingChartRef,
+} from './charts/StreamingChart';
+
 // ---------------------------------------------------------------------------
 // Polar (v1.1.0)
 // ---------------------------------------------------------------------------
@@ -144,6 +152,7 @@ export type { FontSpec, FontWeight, RendererInfo } from './skia';
 
 export {
   applyStacking,
+  createRingBuffer,
   autoDecimate,
   clamp,
   clipToViewport,
@@ -179,6 +188,8 @@ export {
 
 export type {
   Arc,
+  RingBuffer,
+  RingView,
   ArcOptions,
   AutoDecimateOptions,
   AxisInput,
