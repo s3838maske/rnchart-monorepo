@@ -7,6 +7,9 @@
  */
 module.exports = {
   preset: '@react-native/jest-preset',
+  // Reanimated 4 splits its runtime into react-native-worklets, which ships
+  // this resolver to point Jest at the JS-only build.
+  resolver: 'react-native-worklets/jest/resolver.js',
   rootDir: '.',
   testMatch: ['<rootDir>/src/**/*.test.ts', '<rootDir>/src/**/*.test.tsx'],
   transform: {

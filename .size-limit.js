@@ -50,9 +50,11 @@ module.exports = [
     // axis stops paying for d3-time-format. Roughly 11% of the roadmap's
     // 140 kB full-package budget is already committed here at phase 2, so this
     // is worth watching rather than assuming there is room.
+    //
+    // Phase 4 added decimation, hit-testing and d3-quadtree: 21.41 kB.
     name: '@rnchart/core (full)',
     path: 'packages/core/lib/module/index.js',
-    limit: '20 kB',
+    limit: '24 kB',
     gzip: true,
   },
   {
@@ -66,10 +68,13 @@ module.exports = [
   {
     // Phase 1: 551 B. Phases 5-11: 23.74 kB — Chart shell, axes, grid and the
     // five series. The jump is this package finally containing a renderer
-    // rather than a placeholder. Watch it against the 140 kB v1.0.0 ceiling.
+    // rather than a placeholder. Phase 12 added the cursor, crosshair and
+    // tooltip: 40.51 kB. That is 29% of the 140 kB v1.0.0 ceiling with the
+    // legend, theme system and eight more chart families still to come — the
+    // plugin architecture in phase 28 is looking less optional than it reads.
     name: '@rnchart/charts (full)',
     path: 'packages/charts/lib/module/index.js',
-    limit: '28 kB',
+    limit: '45 kB',
     gzip: true,
     ignore: RN_PEERS,
   },

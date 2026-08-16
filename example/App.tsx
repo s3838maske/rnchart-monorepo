@@ -1,13 +1,16 @@
 import type { ReactElement, ReactNode } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   Area,
   Bar,
   Chart,
+  Crosshair,
   Grid,
   Line,
   PieChart,
   Scatter,
+  Tooltip,
   XAxis,
   YAxis,
 } from '@rnchart/charts';
@@ -67,13 +70,35 @@ function Section({
 
 export default function App(): ReactElement {
   return (
-    <View style={styles.root}>
+    <GestureHandlerRootView style={styles.root}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.heading}>@rnchart</Text>
         <Text style={styles.subheading}>
           Skia-powered charts for React Native
         </Text>
+
+        <Section
+          title="Touch me — cursor, crosshair and tooltip"
+          caption="Drag across the chart. Crosshair and dots run entirely on the UI thread; haptics fire once per snapped point, never per frame."
+        >
+          <Chart
+            data={MONTHLY}
+            xKey="month"
+            yKeys={['revenue', 'target']}
+            height={240}
+            cursor
+            haptics
+            overlay={<Tooltip />}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Area seriesKey="revenue" strokeWidth={2.5} />
+            <Line seriesKey="target" strokeWidth={2} />
+            <Crosshair />
+          </Chart>
+        </Section>
 
         <Section
           title="Line"
@@ -210,11 +235,12 @@ export default function App(): ReactElement {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Phases 1-11 · core, layout solver, Skia adapter, 5 series
+            Phases 1-12 · core, layout solver, decimation, hit-testing, 5
+            series, cursor
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </GestureHandlerRootView>
   );
 }
 

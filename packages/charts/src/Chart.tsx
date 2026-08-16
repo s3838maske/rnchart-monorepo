@@ -3,6 +3,9 @@ import type { ReactElement, ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import type { LayoutChangeEvent, StyleProp, ViewStyle } from 'react-native';
 import { Canvas } from '@shopify/react-native-skia';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { useSharedValue } from 'react-native-reanimated';
+import { runOnJS } from 'react-native-worklets';
 import { computeDomain, normaliseMissing, solveLayout } from '@rnchart/core';
 import type {
   AxisScaleSpec,
@@ -15,6 +18,9 @@ import { createMeasureText, useChartFont } from '@rnchart/skia';
 import { ChartProvider } from './ChartContext';
 import type { ChartContextValue, SeriesDatum } from './ChartContext';
 import { seriesColorAt } from './theme';
+import { CursorProvider, nearestIndexByX } from './interaction/cursorState';
+import type { CursorState } from './interaction/cursorState';
+import { triggerImpact } from './interaction/haptics';
 
 export type XScaleKind = 'band' | 'point' | 'linear' | 'time';
 
@@ -35,6 +41,12 @@ export type ChartProps = {
   readonly style?: StyleProp<ViewStyle>;
   readonly animate?: boolean;
   readonly emptyMessage?: string;
+  /** Enable the touch cursor, crosshair and tooltip plumbing. */
+  readonly cursor?: boolean;
+  /** Fire a light impact when the snapped index changes. */
+  readonly haptics?: boolean;
+  /** React Native overlays drawn above the canvas — tooltips, legends. */
+  readonly overlay?: ReactNode;
   readonly children?: ReactNode;
 };
 
@@ -77,6 +89,9 @@ export function Chart({
   style,
   animate = true,
   emptyMessage = 'No data',
+  cursor = false,
+  haptics = false,
+  overlay,
   children,
 }: ChartProps): ReactElement {
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -217,16 +232,108 @@ export function Chart({
     };
   }, [layout, data, xKey, yKeys, series, categories, animate]);
 
+  // ---- Cursor (phase 12) ------------------------------------------------
+  // Pixel x per datum, as a plain array so it can cross into a worklet.
+  const pixelXs = useMemo(
+    () => data.map((_, i) => contextValue.xAt(i)),
+    [data, contextValue]
+  );
+
+  const cursorX = useSharedValue(0);
+  const cursorIndex = useSharedValue(-1);
+  const cursorActive = useSharedValue(false);
+  const cursorSnappedX = useSharedValue(0);
+
+  const cursorState = useMemo<CursorState>(
+    () => ({
+      x: cursorX,
+      index: cursorIndex,
+      active: cursorActive,
+      snappedX: cursorSnappedX,
+    }),
+    [cursorX, cursorIndex, cursorActive, cursorSnappedX]
+  );
+
+  const gesture = useMemo(() => {
+    const update = (touchX: number): void => {
+      'worklet';
+      cursorX.value = touchX;
+      const idx = nearestIndexByX(pixelXs, touchX);
+      if (idx !== cursorIndex.value) {
+        cursorIndex.value = idx;
+        // Only on an actual change — never per frame.
+        if (haptics) runOnJS(triggerImpact)('light');
+      }
+      const snapped = pixelXs[idx];
+      if (snapped !== undefined) cursorSnappedX.value = snapped;
+    };
+
+    const pan = Gesture.Pan()
+      .onBegin((e) => {
+        'worklet';
+        cursorActive.value = true;
+        update(e.x);
+      })
+      .onUpdate((e) => {
+        'worklet';
+        update(e.x);
+      })
+      .onFinalize(() => {
+        'worklet';
+        cursorActive.value = false;
+        cursorIndex.value = -1;
+      });
+
+    const press = Gesture.LongPress()
+      .minDuration(120)
+      .onStart((e) => {
+        'worklet';
+        cursorActive.value = true;
+        update(e.x);
+      })
+      .onFinalize(() => {
+        'worklet';
+        cursorActive.value = false;
+        cursorIndex.value = -1;
+      });
+
+    return Gesture.Simultaneous(pan, press);
+  }, [pixelXs, haptics, cursorX, cursorIndex, cursorActive, cursorSnappedX]);
+
   const ready = size.width > 0 && size.height > 0;
   const isEmpty = data.length === 0;
+
+  const canvas = (
+    <Canvas style={StyleSheet.absoluteFill}>
+      <ChartProvider value={contextValue}>
+        <CursorProvider value={cursor ? cursorState : null}>
+          {children}
+        </CursorProvider>
+      </ChartProvider>
+    </Canvas>
+  );
 
   return (
     <View style={[{ height }, styles.root, style]} onLayout={onLayout}>
       {ready && !isEmpty ? (
         <>
-          <Canvas style={StyleSheet.absoluteFill}>
-            <ChartProvider value={contextValue}>{children}</ChartProvider>
-          </Canvas>
+          {cursor ? (
+            <GestureDetector gesture={gesture}>
+              <View style={StyleSheet.absoluteFill}>{canvas}</View>
+            </GestureDetector>
+          ) : (
+            canvas
+          )}
+
+          {overlay !== undefined ? (
+            <ChartProvider value={contextValue}>
+              <CursorProvider value={cursor ? cursorState : null}>
+                <View style={StyleSheet.absoluteFill} pointerEvents="none">
+                  {overlay}
+                </View>
+              </CursorProvider>
+            </ChartProvider>
+          ) : null}
         </>
       ) : null}
 

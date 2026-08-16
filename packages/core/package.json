@@ -39,7 +39,8 @@
   "scripts": {
     "build": "bob build",
     "clean": "del-cli lib",
-    "test": "jest"
+    "test": "jest",
+    "bench": "node bench/index.mjs"
   },
   "keywords": [
     "react-native",
@@ -74,13 +75,16 @@
   },
   "dependencies": {
     "d3-array": "^3.2.4",
+    "d3-quadtree": "^3.0.1",
     "d3-scale": "^4.0.2",
     "d3-time": "^3.1.0"
   },
   "devDependencies": {
     "@types/d3-array": "^3.2.2",
+    "@types/d3-quadtree": "^3.0.6",
     "@types/d3-scale": "^4.0.9",
     "@types/d3-time": "^3.0.4",
-    "fast-check": "^4.9.0"
+    "fast-check": "^4.9.0",
+    "tinybench": "^6.1.3"
   }
 }

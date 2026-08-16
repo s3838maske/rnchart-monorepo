@@ -45,6 +45,7 @@
   },
   "peerDependencies": {
     "@shopify/react-native-skia": ">=2.0.0",
+    "expo-haptics": ">=13.0.0",
     "react": ">=19.0.0",
     "react-native": ">=0.78.0",
     "react-native-gesture-handler": ">=2.16.0",
@@ -59,6 +60,7 @@
     "@shopify/react-native-skia": "2.6.2",
     "@types/jest": "^29.5.14",
     "babel-jest": "^29.7.0",
+    "expo-haptics": "~57.0.1",
     "jest": "^29.7.0",
     "react": "19.2.3",
     "react-native": "0.86.2",
@@ -99,5 +101,10 @@
       ]
     ],
     "exclude": "**/{__tests__/**,__fixtures__/**,__mocks__/**,*.test.*}"
+  },
+  "peerDependenciesMeta": {
+    "expo-haptics": {
+      "optional": true
+    }
   }
 }

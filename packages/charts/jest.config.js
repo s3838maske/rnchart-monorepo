@@ -9,6 +9,9 @@
  */
 module.exports = {
   preset: '@react-native/jest-preset',
+  // Reanimated 4 splits its runtime into react-native-worklets, which ships
+  // this resolver to point Jest at the JS-only build.
+  resolver: 'react-native-worklets/jest/resolver.js',
   rootDir: '.',
   testMatch: ['<rootDir>/src/**/*.test.ts', '<rootDir>/src/**/*.test.tsx'],
   transform: {
@@ -24,11 +27,17 @@ module.exports = {
   transformIgnorePatterns: [
     'node_modules/(?!(?:@react-native|react-native|@shopify/react-native-skia|react-native-reanimated|react-native-worklets|react-native-gesture-handler|d3-[a-z0-9-]+|internmap)/)',
   ],
-  // Test against workspace source, not built output, so `yarn test` does not
-  // require a prior `yarn build`.
-  // Skia ships a Jest setup that installs a JS mock of the native module.
-  setupFiles: ['@shopify/react-native-skia/jestSetup.js'],
+  // Every native-backed dependency needs its JS mock installed before the
+  // module graph loads. Importing a component that touches a TurboModule
+  // throws at import time otherwise, which surfaces as "suite failed to run"
+  // rather than as a normal assertion failure.
+  setupFiles: [
+    '@shopify/react-native-skia/jestSetup.js',
+    'react-native-gesture-handler/jestSetup.js',
+  ],
   moduleNameMapper: {
+    // Test against workspace source, not built output, so `yarn test` does not
+    // require a prior `yarn build`.
     '^@rnchart/core$': '<rootDir>/../core/src/index.ts',
     '^@rnchart/skia$': '<rootDir>/../skia/src/index.ts',
   },

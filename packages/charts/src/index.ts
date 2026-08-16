@@ -32,6 +32,15 @@ export type { ScatterProps, ScatterShape } from './series/Scatter';
 export { PieChart } from './series/Pie';
 export type { PieChartProps } from './series/Pie';
 
+export { Crosshair } from './interaction/Crosshair';
+export type { CrosshairProps } from './interaction/Crosshair';
+
+export { Tooltip } from './interaction/Tooltip';
+export type { TooltipProps } from './interaction/Tooltip';
+
+export { useCursor, nearestIndexByX } from './interaction/cursorState';
+export type { CursorState } from './interaction/cursorState';
+
 export { SERIES_COLORS, seriesColorAt, withAlpha } from './theme';
 
 export { Placeholder } from './Placeholder';

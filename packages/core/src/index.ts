@@ -11,6 +11,22 @@ export const VERSION = '0.1.0';
 export type { Rect, Size } from './geometry';
 export { clamp, createRect } from './geometry';
 
+export {
+  autoDecimate,
+  clipToViewport,
+  createHitTester,
+  lttb,
+  minMaxDecimate,
+} from './perf';
+export type {
+  AutoDecimateOptions,
+  DecimationStrategy,
+  HitMode,
+  HitResult,
+  HitTester,
+  ViewportSlice,
+} from './perf';
+
 export { computeArcs, monotoneTangents } from './curve';
 export type { Arc, ArcOptions } from './curve';
 
