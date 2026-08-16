@@ -46,6 +46,12 @@ jobs:
       - name: Build
         run: yarn build
 
+      # Budgets ratchet deliberately — see .size-limit.js. A failure here means
+      # a package grew; raise the limit in the same commit as the code, or find
+      # out why it grew.
+      - name: Bundle size budgets
+        run: yarn size
+
       - name: Verify published package contents
         if: matrix.node == 22
         run: |

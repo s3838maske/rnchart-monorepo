@@ -70,6 +70,8 @@ Metro is configured to resolve `@rnchart/*` to workspace **source**, so editing
 | `yarn lint` / `yarn lint:fix` | ESLint across the repo. |
 | `yarn typecheck` | Whole-repo type check, including `example/`. |
 | `yarn format` / `yarn format:check` | Prettier. |
+| `yarn size` | Checks bundle size budgets (requires a build first). |
+| `yarn size:why` | Explains what is contributing to a package's size. |
 | `yarn clean` | Removes `lib/` from every package. |
 | `yarn changeset` | Records a version bump. All three packages move in lockstep. |
 | `yarn release` | Builds, then publishes via changesets. |
@@ -105,7 +107,7 @@ A phase is finished when every line is true, not when the code runs:
 - [ ] Benchmarked against the target, with the number recorded
 - [ ] Accessibility: summary, per-point labels, reduced motion respected
 - [ ] No new direct dependency without written justification
-- [ ] Bundle size delta measured and within budget
+- [ ] Bundle size delta measured and within budget (`yarn size`)
 - [ ] Tested on a low-end Android device, not only a simulator
 - [ ] Changeset written in consumer-facing terms
 
