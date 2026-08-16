@@ -23,7 +23,7 @@ export type ChartContextValue = {
   readonly animate: boolean;
 };
 
-const ChartContext = createContext<ChartContextValue | null>(null);
+export const ChartContext = createContext<ChartContextValue | null>(null);
 
 export const ChartProvider = ChartContext.Provider;
 

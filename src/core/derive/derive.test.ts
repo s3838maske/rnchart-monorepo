@@ -4,6 +4,7 @@ import {
   histogram,
   pareto,
   waterfall,
+  waterfallDomain,
 } from './derive';
 
 describe('chooseBinCount', () => {
@@ -149,6 +150,54 @@ describe('waterfall', () => {
 
   it('handles an empty input', () => {
     expect(waterfall([])).toEqual([]);
+  });
+});
+
+describe('waterfallDomain', () => {
+  it('covers the CUMULATIVE range, not the largest step', () => {
+    // The bug this exists to prevent: a domain built from the deltas tops out
+    // at 120, so the bars that climb to 206 are clipped and simply missing.
+    const steps = [
+      { label: 'Open', value: 120 },
+      { label: 'Sales', value: 86 },
+      { label: 'Costs', value: -52 },
+    ];
+
+    expect(waterfallDomain(steps)).toEqual([0, 206]);
+  });
+
+  it('includes zero even when every bar is above it', () => {
+    const domain = waterfallDomain([
+      { label: 'A', value: 50 },
+      { label: 'B', value: 20 },
+    ]);
+
+    expect(domain[0]).toBe(0);
+    expect(domain[1]).toBe(70);
+  });
+
+  it('extends below zero when the running total goes negative', () => {
+    const domain = waterfallDomain([
+      { label: 'A', value: 30 },
+      { label: 'B', value: -80 },
+    ]);
+
+    expect(domain).toEqual([-50, 30]);
+  });
+
+  it('accounts for subtotals rising from zero', () => {
+    const domain = waterfallDomain([
+      { label: 'A', value: 40 },
+      { label: 'B', value: 25 },
+      { label: 'Total', value: 0, isSum: true },
+    ]);
+
+    expect(domain).toEqual([0, 65]);
+  });
+
+  it('never returns a zero-width domain', () => {
+    expect(waterfallDomain([{ label: 'A', value: 0 }])).toEqual([0, 1]);
+    expect(waterfallDomain([])).toEqual([0, 1]);
   });
 });
 

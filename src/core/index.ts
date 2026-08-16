@@ -78,6 +78,7 @@ export {
   histogram,
   pareto,
   waterfall,
+  waterfallDomain,
 } from './derive';
 export type {
   BinMethod,

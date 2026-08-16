@@ -6,26 +6,41 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
   ActivityGauge,
   AngularAxis,
+  Annotations,
   Area,
+  AreaRange,
   Bar,
+  BoxPlot,
   Chart,
+  ChartAccessibility,
   Crosshair,
+  DataTable,
+  DataTableToggle,
   Drilldown,
+  Dumbbell,
+  ErrorBars,
   Gauge,
   Grid,
   Legend,
   Line,
+  Pattern,
   PieChart,
+  PlotBand,
+  PlotLine,
   PolarChart,
   PolarGrid,
   Radar,
   Scatter,
   StreamingChart,
   Tooltip,
+  Waterfall,
   WindRose,
   ZoomPan,
   XAxis,
   YAxis,
+  histogram,
+  useChart,
+  waterfallDomain,
 } from 'react-native-graphify';
 
 const MONTHLY = [
@@ -107,6 +122,82 @@ const CITIES: Record<string, { name: string; value: number }[]> = {
   KA: [{ name: 'Bengaluru', value: 140 }],
 };
 
+const FORECAST = [
+  { day: 'Mon', low: 12, high: 22, actual: 18 },
+  { day: 'Tue', low: 14, high: 26, actual: 21 },
+  { day: 'Wed', low: 11, high: 19, actual: 13 },
+  { day: 'Thu', low: 16, high: 29, actual: 27 },
+  { day: 'Fri', low: 18, high: 31, actual: 24 },
+  { day: 'Sat', low: 15, high: 25, actual: 20 },
+  { day: 'Sun', low: 13, high: 23, actual: 22 },
+];
+
+const PAY_GAP = [
+  { role: 'Eng', before: 62, after: 91 },
+  { role: 'Design', before: 48, after: 74 },
+  { role: 'Sales', before: 71, after: 83 },
+  { role: 'Support', before: 39, after: 66 },
+];
+
+/**
+ * Four samples with deliberately different shapes: tight, wide, skewed, and one
+ * carrying outliers — so the box plot has something to distinguish.
+ *
+ * n = 24 each, not 10. The notch is 1.58 x IQR / sqrt(n) against a box of one
+ * IQR, so below n = 10 the notch is wider than the box and the outline pinches
+ * shut into a bowtie. That is real statistics — R prints "notches went outside
+ * hinges" for it — but it makes a demo look broken rather than informative.
+ */
+const SAMPLES = [
+  Array.from({ length: 24 }, (_, i) => 45 + ((i * 7) % 5) - 2),
+  Array.from({ length: 24 }, (_, i) => 20 + i * 3 + ((i * 11) % 7)),
+  Array.from(
+    { length: 24 },
+    (_, i) => 30 + Math.round(((i * 13) % 17) * 0.8) + (i > 20 ? i * 3 : 0)
+  ),
+  [...Array.from({ length: 22 }, (_, i) => 50 + ((i * 5) % 9)), 5, 99],
+];
+
+const BOX_CATEGORIES = SAMPLES.map((values, i) => ({
+  group: ['Tight', 'Wide', 'Skewed', 'Outliers'][i] as string,
+  // The chart needs a numeric column to build a y domain from; the box plot
+  // reads the raw samples itself.
+  median: values[Math.floor(values.length / 2)] as number,
+}));
+
+const CASHFLOW = [
+  { step: 'Open', delta: 120 },
+  { step: 'Sales', delta: 86 },
+  { step: 'Refunds', delta: -24 },
+  { step: 'Costs', delta: -52 },
+  { step: 'Tax', delta: -18 },
+  { step: 'Close', delta: 0 },
+];
+
+const CASHFLOW_SUMS = [5];
+
+// The chart would otherwise scale to the largest single DELTA (120) while the
+// bars climb to 206, silently clipping everything above the top.
+const CASHFLOW_DOMAIN = waterfallDomain(
+  CASHFLOW.map((s, i) => ({
+    label: s.step,
+    value: s.delta,
+    isSum: CASHFLOW_SUMS.includes(i),
+  }))
+);
+
+/** Roughly normal, so Freedman–Diaconis has something sensible to bin. */
+const MEASUREMENTS = Array.from({ length: 240 }, (_, i) => {
+  const a = Math.sin(i * 12.9898) * 43758.5453;
+  const b = Math.sin(i * 78.233) * 12345.6789;
+  return 50 + (a - Math.floor(a) + (b - Math.floor(b)) - 1) * 18;
+});
+
+const BINS = histogram(MEASUREMENTS).map((bin) => ({
+  bin: String(Math.round(bin.x0)),
+  count: bin.count,
+}));
+
 const SCATTERED = Array.from({ length: 40 }, (_, i) => ({
   x: i,
   y: Math.round(50 + Math.sin(i / 3) * 30 + ((i * 37) % 23)),
@@ -139,6 +230,34 @@ function LiveFeed({ mode }: { mode: 'scroll' | 'sweep' }): ReactElement {
   return <StreamingChart ref={chart} mode={mode} capacity={240} height={160} />;
 }
 
+/**
+ * Cross-hatch over one value band — a "below target" zone.
+ *
+ * `<Pattern>` takes explicit bounds rather than reading the chart, so it can be
+ * scoped to a region or a single bar as easily as the whole plot. That means
+ * the caller supplies them, and `useChart` is where they come from.
+ */
+function HatchedZone({ from, to }: { from: number; to: number }): ReactElement {
+  const { plotArea, yScale } = useChart();
+  const yTop = yScale.map(to);
+  const yBottom = yScale.map(from);
+
+  return (
+    <Pattern
+      kind="cross-hatch"
+      color="#ef4444"
+      bounds={{
+        x: plotArea.x,
+        y: yTop,
+        width: plotArea.width,
+        height: Math.abs(yBottom - yTop),
+      }}
+      spacing={6}
+      opacity={0.35}
+    />
+  );
+}
+
 function Section({
   title,
   caption,
@@ -159,6 +278,7 @@ function Section({
 
 export default function App(): ReactElement {
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
+  const [tableOpen, setTableOpen] = useState(false);
 
   const toggleKey = (key: string): void => {
     setHiddenKeys((prev) =>
@@ -538,6 +658,201 @@ export default function App(): ReactElement {
           </Drilldown>
         </Section>
 
+        <Section
+          title="Annotations — plot lines and bands"
+          caption="Positioned in DATA coordinates, so they track pan and zoom instead of drifting. Labels dodge the ones already placed."
+        >
+          <Chart data={MONTHLY} xKey="month" yKeys={['revenue']} height={230}>
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <PlotBand axis="y" from={380} to={520} label="Target range" />
+            <HatchedZone from={0} to={250} />
+            <PlotLine axis="y" value={450} label="Goal 450" color="#ef4444" />
+            <PlotLine
+              axis="y"
+              value={300}
+              label="Break-even"
+              dash={[4, 4]}
+              labelAlign="start"
+            />
+            <Line seriesKey="revenue" markers />
+            <Annotations
+              items={[
+                {
+                  id: 'peak',
+                  x: 'Aug',
+                  y: 610,
+                  text: 'Record month',
+                  connector: true,
+                },
+                { id: 'dip', x: 'Mar', y: 180, text: 'Supply issue' },
+              ]}
+            />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Area range + line"
+          caption="Forecast band with the actual over it. The range is declared first so the line lands on top."
+        >
+          <Chart
+            data={FORECAST}
+            xKey="day"
+            yKeys={['low', 'high', 'actual']}
+            height={220}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <AreaRange lowKey="low" highKey="high" />
+            <Line seriesKey="actual" markers strokeWidth={2.5} />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Dumbbell"
+          caption="Before and after, joined. Reads as change per row rather than two bars you have to mentally subtract."
+        >
+          <Chart
+            data={PAY_GAP}
+            xKey="role"
+            yKeys={['before', 'after']}
+            height={200}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Dumbbell lowKey="before" highKey="after" markerSize={6} />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Box plot"
+          caption="Tukey whiskers reach the extreme value INSIDE the fence, never the fence itself. Quartiles come from core, tested against R."
+        >
+          <Chart
+            data={BOX_CATEGORIES}
+            xKey="group"
+            yKeys={['median']}
+            height={260}
+            yDomain={[0, 105]}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <BoxPlot groups={SAMPLES} showMean notched />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Error bars"
+          caption="Attachable over any series — here a column with its confidence interval."
+        >
+          <Chart
+            data={FORECAST}
+            xKey="day"
+            yKeys={['actual', 'low', 'high']}
+            height={200}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Bar seriesKey="actual" cornerRadius={4} />
+            <ErrorBars lowKey="low" highKey="high" />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Waterfall"
+          caption="Running totals with connectors. The closing bar is a subtotal, so it rises from zero rather than stacking on the running total."
+        >
+          <Chart
+            data={CASHFLOW}
+            xKey="step"
+            yKeys={['delta']}
+            height={220}
+            yDomain={CASHFLOW_DOMAIN}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Waterfall valueKey="delta" sumIndices={CASHFLOW_SUMS} />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Histogram"
+          caption="240 samples binned by Freedman–Diaconis, which uses the IQR and so survives an outlier that would blow Scott's bin width out."
+        >
+          <Chart data={BINS} xKey="bin" yKeys={['count']} height={200}>
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Bar seriesKey="count" cornerRadius={2} />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Pattern fills"
+          caption="Texture instead of colour alone, so the series stay distinguishable in greyscale and under colour-vision deficiency."
+        >
+          <Chart
+            data={MONTHLY}
+            xKey="month"
+            yKeys={['revenue', 'target']}
+            height={200}
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Bar
+              grouped
+              cornerRadius={4}
+              pattern="diagonal"
+              patternColor="#1e3a8a"
+            />
+          </Chart>
+        </Section>
+
+        <Section
+          title="Accessibility — turn on VoiceOver or TalkBack"
+          caption="A Skia canvas is invisible to screen readers. This adds a spoken summary plus one focusable element per point, in data order."
+        >
+          <Chart
+            data={MONTHLY}
+            xKey="month"
+            yKeys={['revenue']}
+            height={200}
+            overlay={
+              <ChartAccessibility
+                chartType="Line chart"
+                title="Monthly revenue"
+                formatValue={(v) => `${String(Math.round(v))} thousand`}
+              />
+            }
+          >
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Line seriesKey="revenue" markers />
+          </Chart>
+
+          <DataTableToggle
+            expanded={tableOpen}
+            onPress={() => {
+              setTableOpen((v) => !v);
+            }}
+          />
+          {tableOpen ? (
+            <DataTable
+              data={MONTHLY}
+              xKey="month"
+              seriesKeys={['revenue', 'target']}
+            />
+          ) : null}
+        </Section>
+
         <Section title="Donut" caption="Arc geometry computed in core.">
           <PieChart
             data={SPLIT}
@@ -569,7 +884,7 @@ export default function App(): ReactElement {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            v1.1.0 · cartesian + polar · 10 chart types
+            v1.4.0 · cartesian + polar + statistical · 18 chart types
           </Text>
         </View>
       </ScrollView>

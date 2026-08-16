@@ -1,6 +1,12 @@
 import { useMemo } from 'react';
 import type { ReactElement } from 'react';
-import { Group, Path, Skia, Text } from '@shopify/react-native-skia';
+import {
+  DashPathEffect,
+  Group,
+  Path,
+  Skia,
+  Text,
+} from '@shopify/react-native-skia';
 import { resolveLabelPlacement } from '../../core';
 import type { LabelCandidate } from '../../core';
 import { useChartFont } from '../../skia';
@@ -76,8 +82,15 @@ export function PlotLine({
         style="stroke"
         strokeWidth={width}
         color={withAlpha(color, 0.55)}
-        {...(dash !== null ? { strokeCap: 'butt' as const } : {})}
-      />
+        strokeCap="butt"
+      >
+        {/* Dashes come from a path effect, not a stroke property — a plain
+            strokeCap leaves the line solid, which is how this shipped drawing
+            every plot line solid including the dashed default. */}
+        {dash !== null ? (
+          <DashPathEffect intervals={[dash[0], dash[1]]} />
+        ) : null}
+      </Path>
       {label !== undefined ? (
         <Text
           x={labelX}

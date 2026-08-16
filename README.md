@@ -156,6 +156,7 @@ merely intended.
 - [Getting started](docs/getting-started.md)
 - [Chart types](docs/chart-types.md)
 - [Interaction](docs/interaction.md)
+- [Accessibility](docs/accessibility.md)
 - [Theming](docs/theming.md)
 - [Performance](docs/performance.md)
 - [Why not SVG?](docs/why-not-svg.md)

@@ -1,6 +1,6 @@
 {
   "name": "react-native-graphify",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Skia-powered charts for React Native. 15+ chart types with a UI-thread touch cursor, pan/zoom, streaming, drilldown, statistical series and a real screen-reader layer. No WebView, one API for iOS and Android.",
   "keywords": [
     "react-native",

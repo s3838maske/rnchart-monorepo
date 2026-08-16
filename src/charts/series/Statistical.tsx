@@ -221,8 +221,15 @@ export function BoxPlot({
       const height = Math.abs(yQ3 - yQ1);
 
       if (notched) {
-        const notch = Math.abs(
-          yScale.map(s.median) - yScale.map(s.median + notchWidth(s))
+        // Clamped to stay inside the box. The notch is 1.58 x IQR / sqrt(n)
+        // while half the box is IQR / 2, so for n < 10 the notch is the larger
+        // of the two and the outline turns inside out — an hourglass with its
+        // waist outside the quartiles, which reads as a rendering fault rather
+        // than as the "sample too small to notch" signal it really is.
+        const notch = Math.min(
+          Math.abs(yScale.map(s.median) - yScale.map(s.median + notchWidth(s))),
+          Math.abs(yMed - yQ1),
+          Math.abs(yMed - yQ3)
         );
         const inset = half * 0.45;
         // Taper inward at the median to show its confidence interval.
@@ -380,6 +387,11 @@ export type WaterfallProps = {
  * subtotals rise from ZERO rather than from the running total. That is an
  * absolute position, not another delta, and treating it as a delta is what
  * makes waterfall charts silently wrong.
+ *
+ * Set the chart's `yDomain` from `waterfallDomain(steps)`. The chart derives
+ * its domain from the values it is handed — the DELTAS — while the bars are
+ * drawn at cumulative positions that usually climb higher, and the ones past
+ * the top are then clipped away with nothing to show for it.
  */
 export function Waterfall({
   valueKey,

@@ -159,9 +159,11 @@ export function describeChart(
 
   if (description.trend !== 'volatile' && description.changePercent !== 0) {
     const direction = description.changePercent > 0 ? 'up' : 'down';
-    parts.push(
-      `Overall ${direction} ${formatValue(Math.abs(description.changePercent))} percent.`
-    );
+    // NOT formatValue: that formats values in the series' own units, and a
+    // percentage is not one. Passing it through produced "up 190 thousand
+    // percent" for a formatter that appends "thousand".
+    const percent = Math.round(Math.abs(description.changePercent));
+    parts.push(`Overall ${direction} ${String(percent)} percent.`);
   }
 
   parts.push('Swipe right to explore data points.');

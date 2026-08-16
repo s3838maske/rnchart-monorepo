@@ -3,7 +3,7 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
-## [0.3.0] — unreleased
+## [0.4.0] — unreleased
 
 Completes the v1 line of the roadmap: phases 22 through 27.
 
@@ -31,10 +31,39 @@ Completes the v1 line of the roadmap: phases 22 through 27.
   data a Skia canvas would otherwise hide entirely.
 - `<DataTable>` and `<DataTableToggle>` — the numbers as an accessible table,
   useful to sighted users too.
-- `<Pattern>` — texture fills so series are distinguishable without colour.
+- `<Pattern>` — texture fills so series are distinguishable without colour,
+  and a `pattern` prop on `<Bar>` that clips the texture to the bars.
 - Core: `describeChart`, `describeSeries`, `describePoint`,
   `describeOutliers`. Trend is measured relative to the data's own standard
   deviation, not an absolute threshold.
+
+### Fixed — found by running phases 22–27 on real devices
+
+Every one of these passed typecheck, lint and the full unit suite.
+
+- `<PlotLine dash>` was typed, documented and defaulted to `[4, 4]`, but never
+  applied — it only set `strokeCap`. Every plot line drew solid, including the
+  dashed default. It is a `DashPathEffect` now.
+- `<Waterfall>` was clipped by default. A chart derives its y domain from the
+  values it is handed — the deltas — while the bars are drawn at cumulative
+  positions that climb higher, so bars past the top vanished with nothing to
+  indicate it. Added `waterfallDomain(steps)` to pass as `yDomain`.
+- The accessibility layer exposed **nothing at all on iOS**. A view marked
+  `accessible` collapses its children into one element there, so the container
+  swallowed every per-point element. The summary is a sibling now, not a
+  parent.
+- Screen-reader focus order was wrong on Android: the per-point views were
+  boxes at each data point, and Android orders traversal by bounds, so real
+  revenue data was read as `Jan, Feb, Apr, Jun, May, Jul, Aug, Mar`. They are
+  full-height columns now, which share a top edge and so order by x.
+- `describeChart` ran the change percentage through `formatValue`, producing
+  `Overall up 190 thousand percent` for a formatter that appends "thousand".
+  A percentage is not a value in the series' units.
+- Notched box plots turned inside out for n < 10, where the notch is wider
+  than the box. Clamped to the quartiles.
+- `<DataTable>` could only be rendered inside a `<Chart>`, which has a fixed
+  height and clips its children — so the table was cropped and drawn over the
+  plot. It now takes `data` and `xKey` directly.
 
 ### Fixed
 

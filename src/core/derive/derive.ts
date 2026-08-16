@@ -199,6 +199,33 @@ export function waterfall(steps: readonly WaterfallStep[]): WaterfallBar[] {
   });
 }
 
+/**
+ * The y extent a waterfall actually occupies.
+ *
+ * Needed because a chart derives its domain from the VALUES it is given, while
+ * a waterfall draws at CUMULATIVE positions — deltas of 120 and 86 reach 206,
+ * which a domain built from the deltas stops well short of. The bars above the
+ * top are then clipped and simply missing, with nothing to indicate it. Pass
+ * this to the chart's `yDomain` whenever the running total can exceed the
+ * largest single step, which is most of the time.
+ */
+export function waterfallDomain(
+  steps: readonly WaterfallStep[]
+): [number, number] {
+  const bars = waterfall(steps);
+  if (bars.length === 0) return [0, 1];
+
+  // Zero is always included: a waterfall is read against its baseline.
+  let min = 0;
+  let max = 0;
+  for (const bar of bars) {
+    min = Math.min(min, bar.start, bar.end);
+    max = Math.max(max, bar.start, bar.end);
+  }
+
+  return min === max ? [min, min + 1] : [min, max];
+}
+
 export type ParetoPoint = {
   readonly label: string;
   readonly value: number;

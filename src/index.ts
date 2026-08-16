@@ -235,6 +235,7 @@ export {
   pareto,
   quantileSorted,
   waterfall,
+  waterfallDomain,
   autoDecimate,
   clamp,
   clipToViewport,

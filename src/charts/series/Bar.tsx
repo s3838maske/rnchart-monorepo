@@ -1,10 +1,12 @@
 import { useMemo } from 'react';
 import type { ReactElement } from 'react';
-import { Path, Skia } from '@shopify/react-native-skia';
+import { Group, Path, Skia } from '@shopify/react-native-skia';
 
 import { useChart } from '../ChartContext';
 import { SeriesGradient, resolveGradient } from '../gradient';
 import type { GradientInput } from '../gradient';
+import { Pattern } from '../patterns';
+import type { PatternKind } from '../patterns';
 
 export type BarProps = {
   readonly seriesKey?: string;
@@ -18,6 +20,15 @@ export type BarProps = {
   readonly minBarLength?: number;
   /** Gradient fill. `true`, a colour array, or a full spec. */
   readonly gradient?: GradientInput;
+  /**
+   * Texture fill, clipped to the bars.
+   *
+   * Redundant encoding: colour plus pattern means the series stays readable to
+   * someone who cannot separate two hues, and still prints in greyscale. Use
+   * `<Pattern>` directly if you want to texture something other than a series.
+   */
+  readonly pattern?: PatternKind;
+  readonly patternColor?: string;
 };
 
 /**
@@ -40,6 +51,8 @@ export function Bar({
   barPadding = 0.15,
   minBarLength = 2,
   gradient,
+  pattern,
+  patternColor,
 }: BarProps): ReactElement {
   const {
     yKeys,
@@ -142,11 +155,24 @@ export function Bar({
       {paths.map((p) => {
         const spec = resolveGradient(gradient, p.color);
         return (
-          <Path key={p.key} path={p.path} style="fill" color={p.color}>
-            {spec !== null ? (
-              <SeriesGradient spec={spec} frame={plotArea} />
+          <Group key={p.key}>
+            <Path path={p.path} style="fill" color={p.color}>
+              {spec !== null ? (
+                <SeriesGradient spec={spec} frame={plotArea} />
+              ) : null}
+            </Path>
+            {/* Clipped to the bar path, so the texture lands on the series
+                rather than washing over the whole plot. */}
+            {pattern !== undefined ? (
+              <Group clip={p.path}>
+                <Pattern
+                  kind={pattern}
+                  color={patternColor ?? p.color}
+                  bounds={plotArea}
+                />
+              </Group>
             ) : null}
-          </Path>
+          </Group>
         );
       })}
     </>

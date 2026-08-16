@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useContext, useMemo } from 'react';
 import type { ReactElement } from 'react';
 import {
   AccessibilityInfo,
@@ -7,9 +7,10 @@ import {
   Text,
   View,
 } from 'react-native';
-import { describeChart, describePoint } from '../../core';
+import { describeChart, describePoint, normaliseMissing } from '../../core';
 
-import { useChart } from '../ChartContext';
+import { ChartContext, useChart } from '../ChartContext';
+import type { SeriesDatum } from '../ChartContext';
 import { CHART_COLORS } from '../colors';
 
 export type ChartAccessibilityProps = {
@@ -45,8 +46,7 @@ export function ChartAccessibility({
   formatValue,
   maxPoints = 100,
 }: ChartAccessibilityProps): ReactElement | null {
-  const { yKeys, valuesFor, validFor, data, xKey, plotArea, xAt, yScale } =
-    useChart();
+  const { yKeys, valuesFor, validFor, data, xKey, plotArea, xAt } = useChart();
 
   const key = seriesKey ?? yKeys[0];
 
@@ -78,28 +78,56 @@ export function ChartAccessibility({
   const valid = validFor(key);
   const total = values.length;
   const showPoints = total > 0 && total <= maxPoints;
+  // Wide enough to be an easy target, never so wide it overlaps its neighbour
+  // — overlapping bounds put Android's traversal ordering back in doubt.
+  const columnWidth = total > 0 ? Math.max(8, plotArea.width / total) : 0;
 
   return (
-    <View
-      style={styles.layer}
-      // The summary is what a screen-reader user hears FIRST. It must carry
-      // the point of the chart, not merely announce that a chart exists.
-      accessible
-      accessibilityRole="image"
-      accessibilityLabel={summary}
-    >
+    // The container is deliberately NOT `accessible`. On iOS a view with
+    // `accessible` collapses everything beneath it into ONE element, so
+    // marking the layer would have made the summary the only thing VoiceOver
+    // could reach and silently swallowed every per-point element — the exact
+    // feature this component exists for. Android's semantics differ, which is
+    // why it worked there and not here.
+    <View style={styles.layer}>
+      {/* Summary first: it is what a screen-reader user hears before anything
+          else, and it must carry the point of the chart rather than merely
+          announce that a chart exists. It spans the whole layer, so its top
+          edge sits above every column and both platforms order it first. */}
+      <View
+        style={styles.layer}
+        accessible
+        accessibilityRole="image"
+        accessibilityLabel={summary}
+      />
+
       {showPoints
         ? Array.from({ length: total }, (_, i) => {
             const value = valid[i] === 1 ? (values[i] as number) : Number.NaN;
             const cx = xAt(i);
-            const cy = Number.isFinite(value) ? yScale.map(value) : plotArea.y;
 
             return (
               <View
                 key={i}
                 // Deliberately invisible but focusable: a screen reader reads
                 // it, a sighted user never sees it.
-                style={[styles.point, { left: cx - 16, top: cy - 16 }]}
+                //
+                // A FULL-HEIGHT COLUMN, not a box at the data point. Android
+                // orders accessibility traversal by view bounds, top row
+                // first — so boxes sitting at their y values get read in
+                // value order, which for revenue data came out as
+                // "Jan, Feb, Apr, Jun, May, Jul, Aug, Mar". Columns share a
+                // top edge, so the only thing left to order by is x, which is
+                // data order. It is a bigger target for switch control too.
+                style={[
+                  styles.point,
+                  {
+                    left: cx - columnWidth / 2,
+                    top: plotArea.y,
+                    width: columnWidth,
+                    height: plotArea.height,
+                  },
+                ]}
                 accessible
                 accessibilityRole="text"
                 accessibilityLabel={describePoint(i, total, value, {
@@ -118,6 +146,17 @@ export type DataTableProps = {
   readonly seriesKeys?: readonly string[];
   readonly maxRows?: number;
   readonly formatValue?: (value: number) => string;
+  /**
+   * Data to tabulate, when rendering OUTSIDE a `<Chart>`.
+   *
+   * Which is the normal case: a chart has a fixed height and clips its
+   * children, so a table placed inside it would be cropped and drawn on top of
+   * the plot. Supplying the data directly is what lets the table sit beneath
+   * the chart where it belongs. Omit these and it reads the surrounding chart
+   * instead, for the rarer in-overlay use.
+   */
+  readonly data?: readonly SeriesDatum[];
+  readonly xKey?: string;
 };
 
 /**
@@ -131,9 +170,51 @@ export function DataTable({
   seriesKeys,
   maxRows = 50,
   formatValue,
+  data: dataProp,
+  xKey: xKeyProp,
 }: DataTableProps): ReactElement {
-  const { yKeys, valuesFor, validFor, data, xKey } = useChart();
-  const keys = seriesKeys ?? yKeys;
+  // Read the context WITHOUT useChart, which throws when absent — here a
+  // missing chart is the expected standalone case, not a mistake.
+  const chart = useContext(ChartContext);
+
+  const data = dataProp ?? chart?.data ?? [];
+  const xKey = xKeyProp ?? chart?.xKey ?? '';
+
+  const keys = useMemo(() => {
+    if (seriesKeys !== undefined) return seriesKeys;
+    if (dataProp === undefined && chart !== null) return chart.yKeys;
+    // Infer from the first row: every numeric column that is not the x axis.
+    const first = data[0];
+    if (first === undefined) return [];
+    return Object.keys(first).filter(
+      (k) => k !== xKey && typeof first[k] === 'number'
+    );
+  }, [seriesKeys, dataProp, chart, data, xKey]);
+
+  // Columns come from the chart when it owns the data, and are normalised here
+  // when the caller supplied it — same missing-data rules either way.
+  const columns = useMemo(
+    () =>
+      keys.map((k) => {
+        if (dataProp === undefined && chart !== null) {
+          return {
+            key: k,
+            values: chart.valuesFor(k),
+            valid: chart.validFor(k),
+          };
+        }
+        // A non-numeric cell is missing data as far as the table is concerned —
+        // it renders as an em dash rather than as a stringified object.
+        const raw = data.map((d) => {
+          const v = d[k];
+          return typeof v === 'number' ? v : null;
+        });
+        const { values, valid } = normaliseMissing(raw);
+        return { key: k, values, valid };
+      }),
+    [keys, dataProp, chart, data]
+  );
+
   const format =
     formatValue ?? ((v: number) => String(Math.round(v * 100) / 100));
 
@@ -143,9 +224,9 @@ export function DataTable({
     <View accessibilityRole="summary" style={styles.table}>
       <View style={styles.row}>
         <Text style={[styles.cell, styles.header]}>{xKey}</Text>
-        {keys.map((k) => (
-          <Text key={k} style={[styles.cell, styles.header]}>
-            {k}
+        {columns.map((c) => (
+          <Text key={c.key} style={[styles.cell, styles.header]}>
+            {c.key}
           </Text>
         ))}
       </View>
@@ -160,11 +241,11 @@ export function DataTable({
         return (
           <View key={i} style={styles.row} accessible>
             <Text style={styles.cell}>{label}</Text>
-            {keys.map((k) => {
-              const v = valuesFor(k)[i];
-              const ok = validFor(k)[i] === 1 && v !== undefined;
+            {columns.map((c) => {
+              const v = c.values[i];
+              const ok = c.valid[i] === 1 && v !== undefined;
               return (
-                <Text key={k} style={styles.cell}>
+                <Text key={c.key} style={styles.cell}>
                   {ok ? format(v) : '—'}
                 </Text>
               );
@@ -217,7 +298,7 @@ export function DataTableToggle({
 
 const styles = StyleSheet.create({
   layer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  point: { position: 'absolute', width: 32, height: 32 },
+  point: { position: 'absolute' },
   table: { marginTop: 8 },
   row: { flexDirection: 'row', paddingVertical: 3 },
   cell: { flex: 1, fontSize: 11, color: CHART_COLORS.muted },

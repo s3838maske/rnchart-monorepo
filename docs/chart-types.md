@@ -236,3 +236,160 @@ const rb = createRingBuffer(1000, 2); // 1000 entries of [x, y]
 rb.push(x, y);
 const { view, copied, length } = rb.toView();
 ```
+
+## Annotations
+
+Plot lines, bands and callouts. All three are positioned in **data
+coordinates**, so they track pan and zoom through the same scales the series
+use — a line pinned to a pixel drifts the moment the chart moves.
+
+```tsx
+<Chart data={monthly} xKey="month" yKeys={['revenue']}>
+  <Grid />
+  <YAxis />
+  <XAxis />
+
+  <PlotBand axis="y" from={380} to={520} label="Target range" />
+  <PlotLine axis="y" value={450} label="Goal" color="#ef4444" />
+  <PlotLine axis="y" value={300} label="Break-even" dash={[4, 4]} />
+
+  <Line seriesKey="revenue" markers />
+
+  <Annotations
+    items={[
+      { id: 'peak', x: 'Aug', y: 610, text: 'Record month', connector: true },
+      { id: 'dip', x: 'Mar', y: 180, text: 'Supply issue' },
+    ]}
+  />
+</Chart>
+```
+
+`dash` takes `[on, off]` in pixels, or `null` for a solid line. Overlapping
+annotation labels are resolved by `resolveLabelPlacement` — the same function
+the data labels use, because two different answers to "do these labels
+overlap" is worse than either answer alone.
+
+## Statistical series
+
+```tsx
+<AreaRange lowKey="low" highKey="high" />   {/* confidence band */}
+<Line seriesKey="actual" />                 {/* declared after, so it sits on top */}
+
+<Dumbbell lowKey="before" highKey="after" />
+<ErrorBars lowKey="low" highKey="high" />
+```
+
+### Box plots
+
+```tsx
+<BoxPlot groups={samples} whiskers="tukey" notched showMean />
+```
+
+`groups` is one array of **raw values** per category — the component computes
+the statistics itself.
+
+| `whiskers` | Reach |
+| --- | --- |
+| `tukey` | The most extreme value inside Q1 − 1.5·IQR … Q3 + 1.5·IQR. Anything beyond is an outlier. |
+| `minmax` | The true minimum and maximum. No outliers. |
+| `stddev` | Mean ± one standard deviation. |
+
+Two details that are easy to get wrong and are pinned down by tests:
+
+- Whiskers stop at the most extreme value **inside** the fence, never at the
+  fence itself. Drawing to the fence invents a data point that does not exist.
+- Quantiles come from `computeBoxStats` in core, verified against known R
+  output. Libraries disagree about quantile definitions and the discrepancy is
+  a recurring bug report, so both R type 6 and type 7 are available; 7 is the
+  default, matching R and NumPy.
+
+Notches show the median's confidence interval, `±1.58·IQR/√n`. That is wider
+than half the box whenever **n < 10**, so below that the notch is clamped to
+the quartiles — otherwise the outline pinches shut into a bowtie that reads as
+a rendering fault. It is really the "sample too small to notch" signal; R
+prints `notches went outside hinges` for the same situation.
+
+### Waterfall
+
+```tsx
+const steps = cashflow.map((s, i) => ({
+  label: s.step,
+  value: s.delta,
+  isSum: i === cashflow.length - 1,
+}));
+
+<Chart
+  data={cashflow}
+  xKey="step"
+  yKeys={['delta']}
+  yDomain={waterfallDomain(steps)}
+>
+  <Waterfall valueKey="delta" sumIndices={[cashflow.length - 1]} />
+</Chart>
+```
+
+**Pass `yDomain={waterfallDomain(steps)}`.** The chart derives its domain from
+the values it is handed — the *deltas* — while the bars are drawn at cumulative
+positions that usually climb higher. Without it, every bar above the largest
+single delta is clipped away with nothing to indicate it.
+
+Subtotal columns rise from **zero**, not from the running total. A subtotal is
+an absolute position, not another delta, and treating it as one is what makes
+waterfall charts silently wrong.
+
+### Histograms and derived series
+
+These are plain functions in core — they return data, and you render it with
+whatever series suits:
+
+```ts
+import { histogram, pareto, bellCurve, chooseBinCount } from 'react-native-graphify';
+
+const bins = histogram(samples);                     // Freedman–Diaconis
+const bins = histogram(samples, { bins: 20 });       // explicit count
+const bins = histogram(samples, { bins: [0, 10, 20] }); // explicit edges
+```
+
+Freedman–Diaconis is the default because it uses the IQR rather than the
+standard deviation, so a single outlier does not blow the bin width out. It
+falls back to Sturges when the IQR is zero, as NumPy does. Bins are half-open
+`[x0, x1)` **except the last**, which includes its upper edge — otherwise the
+single largest value silently vanishes.
+
+## Pattern fills
+
+Texture as a second channel alongside colour, so a chart stays readable in
+greyscale and under colour-vision deficiency.
+
+```tsx
+<Bar grouped pattern="diagonal" />
+```
+
+Kinds: `diagonal`, `diagonal-reverse`, `cross-hatch`, `dots`, `horizontal`,
+`vertical`.
+
+For anything that is not a series — a shaded "below target" zone, a single
+highlighted band — use `<Pattern>` directly. It takes explicit bounds rather
+than reading the chart, so it can be scoped to a region as easily as the whole
+plot:
+
+```tsx
+function HatchedZone({ from, to }: { from: number; to: number }) {
+  const { plotArea, yScale } = useChart();
+  const yTop = yScale.map(to);
+  const yBottom = yScale.map(from);
+
+  return (
+    <Pattern
+      kind="cross-hatch"
+      color="#ef4444"
+      bounds={{
+        x: plotArea.x,
+        y: yTop,
+        width: plotArea.width,
+        height: Math.abs(yBottom - yTop),
+      }}
+    />
+  );
+}
+```
