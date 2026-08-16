@@ -40,7 +40,7 @@ export default tseslint.config(
   // config block. The core-purity block below therefore repeats this d3 entry.
   // Removing it there would silently un-restrict d3 inside core.
   {
-    files: ['packages/**/*.ts', 'packages/**/*.tsx'],
+    files: ['src/**/*.ts', 'src/**/*.tsx'],
     rules: {
       'no-restricted-imports': ['error', { paths: [D3_BUNDLE_RESTRICTION] }],
       '@typescript-eslint/no-explicit-any': 'error',
@@ -59,7 +59,7 @@ export default tseslint.config(
   // Must come AFTER the block above so it wins for files under packages/core.
   // ---------------------------------------------------------------------
   {
-    files: ['packages/core/**/*.ts'],
+    files: ['src/core/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',

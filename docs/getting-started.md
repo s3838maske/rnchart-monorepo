@@ -9,7 +9,7 @@
 ## Install
 
 ```sh
-npm install @rnchart/charts @rnchart/core @rnchart/skia
+npm install react-native-graphify
 npx expo install @shopify/react-native-skia react-native-reanimated react-native-worklets react-native-gesture-handler
 ```
 

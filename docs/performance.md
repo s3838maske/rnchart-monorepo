@@ -49,9 +49,9 @@ Native peers excluded — consumers already ship those.
 
 | Package | Size | Budget |
 | --- | --- | --- |
-| `@rnchart/core` | 23.0 kB | 24 kB |
-| `@rnchart/skia` | 0.7 kB | 2 kB |
-| `@rnchart/charts` | 42.3 kB | 45 kB |
+| `react-native-graphify` | 23.0 kB | 24 kB |
+| `react-native-graphify` | 0.7 kB | 2 kB |
+| `react-native-graphify` | 42.3 kB | 45 kB |
 
 Core's size is dominated by transitive d3 (`d3-interpolate`, `d3-color`,
 `d3-format`, `d3-time-format`), not by the scale maths. Making time scales an
@@ -65,7 +65,7 @@ working.
 ## Decimation
 
 ```ts
-import { autoDecimate } from '@rnchart/core';
+import { autoDecimate } from 'react-native-graphify';
 
 const visible = autoDecimate(points, plotWidthPx, { strategy: 'lttb' });
 ```

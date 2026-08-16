@@ -3,7 +3,7 @@
 ## One call to rebrand
 
 ```tsx
-import { setDefaults } from '@rnchart/charts';
+import { setDefaults } from 'react-native-graphify';
 
 setDefaults({
   palette: 'muted',
@@ -54,7 +54,7 @@ version of it did, and the test caught it.
 Check your own:
 
 ```ts
-import { verifyPalette } from '@rnchart/core';
+import { verifyPalette } from 'react-native-graphify';
 
 const report = verifyPalette(['#3b82f6', '#f59e0b']);
 if (!report.ok) console.warn(report.failures);

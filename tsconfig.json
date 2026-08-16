@@ -5,19 +5,14 @@
     "noEmit": true,
     "baseUrl": ".",
     "paths": {
-      "@rnchart/core": ["packages/core/src/index.ts"],
-      "@rnchart/core/*": ["packages/core/src/*"],
-      "@rnchart/skia": ["packages/skia/src/index.ts"],
-      "@rnchart/skia/*": ["packages/skia/src/*"],
-      "@rnchart/charts": ["packages/charts/src/index.ts"],
-      "@rnchart/charts/*": ["packages/charts/src/*"]
+      "react-native-graphify": ["src/index.ts"]
     }
   },
   "include": [
-    "packages/*/src/**/*.ts",
-    "packages/*/src/**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     "example/**/*.ts",
     "example/**/*.tsx"
   ],
-  "exclude": ["**/node_modules/**", "**/lib/**", "**/.expo/**"]
+  "exclude": ["**/node_modules/**", "lib", "**/.expo/**"]
 }

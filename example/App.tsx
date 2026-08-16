@@ -15,7 +15,7 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from '@rnchart/charts';
+} from 'react-native-graphify';
 
 const MONTHLY = [
   { month: 'Jan', revenue: 210, target: 180, units: 42 },
@@ -89,7 +89,7 @@ export default function App(): ReactElement {
     <GestureHandlerRootView style={styles.root}>
       <StatusBar barStyle="dark-content" />
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>@rnchart</Text>
+        <Text style={styles.heading}>react-native-graphify</Text>
         <Text style={styles.subheading}>
           Skia-powered charts for React Native
         </Text>
@@ -281,7 +281,7 @@ export default function App(): ReactElement {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: '#ffffff' },
   content: { paddingTop: 64, paddingBottom: 48, paddingHorizontal: 16 },
-  heading: { fontSize: 30, fontWeight: '700', letterSpacing: 0.3 },
+  heading: { fontSize: 26, fontWeight: '700', letterSpacing: 0.3 },
   subheading: { fontSize: 14, opacity: 0.55, marginTop: 2, marginBottom: 8 },
   section: { marginTop: 28 },
   sectionTitle: { fontSize: 17, fontWeight: '600' },

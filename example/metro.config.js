@@ -6,7 +6,7 @@ const workspaceRoot = path.resolve(projectRoot, '..');
 
 const config = getDefaultConfig(projectRoot);
 
-// Watch the whole workspace so editing package source hot-reloads the app.
+// Watch the whole workspace so editing library source hot-reloads the app.
 config.watchFolders = [workspaceRoot];
 
 config.resolver.nodeModulesPaths = [
@@ -15,29 +15,17 @@ config.resolver.nodeModulesPaths = [
 ];
 config.resolver.disableHierarchicalLookup = true;
 
-// Resolve @rnchart/* to workspace SOURCE rather than to built output.
-//
-// Done explicitly instead of relying on the `source` export condition: the
-// packages publish an `exports` map, and Metro honours `exports` ahead of the
-// `react-native` field, which would otherwise send development builds to a
-// `lib/` directory that does not exist until `yarn build` has run.
-const workspacePackages = ['core', 'skia', 'charts'];
+// Resolve the library to workspace SOURCE rather than built output, so the
+// example hot-reloads on src changes without a `yarn build` first.
+const PACKAGE_NAME = 'react-native-graphify';
 
 const defaultResolveRequest = config.resolver.resolveRequest;
 
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  const match = /^@rnchart\/([^/]+)$/.exec(moduleName);
-
-  if (match && workspacePackages.includes(match[1])) {
+  if (moduleName === PACKAGE_NAME) {
     return {
       type: 'sourceFile',
-      filePath: path.resolve(
-        workspaceRoot,
-        'packages',
-        match[1],
-        'src',
-        'index.ts'
-      ),
+      filePath: path.resolve(workspaceRoot, 'src', 'index.ts'),
     };
   }
 

@@ -13,7 +13,7 @@ badly.
 ## What is actually needed
 
 A rendering library's correctness is visual. Unit tests cover the maths in
-`@rnchart/core` well — 231 of them — but they cannot catch:
+`react-native-graphify` well — 231 of them — but they cannot catch:
 
 - A path built with the wrong winding order
 - A gradient that renders differently on iOS and Android

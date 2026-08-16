@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Pre-publish verification.
+ * Pre-publish verification for react-native-graphify.
  *
- * Runs every gate that must pass before `changeset publish`, and inspects what
- * would actually go into each tarball. It deliberately does NOT publish —
- * publishing is irreversible and public, so it stays a human decision.
+ * Runs every gate that must pass before publishing, and inspects what would
+ * actually go into the tarball. It deliberately does NOT publish — publishing
+ * is public and irreversible, so it stays a human decision.
  *
  * Usage: yarn prepublish:check
  */
@@ -13,7 +13,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = process.cwd();
-const PACKAGES = ['core', 'skia', 'charts'];
+const pkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
 
 let failures = 0;
 let warnings = 0;
@@ -27,26 +27,15 @@ const warn = (msg) => {
   console.log(`  \x1b[33m!\x1b[0m ${msg}`);
   warnings += 1;
 };
-
-function section(title) {
-  console.log(`\n\x1b[1m${title}\x1b[0m`);
-}
+const section = (t) => console.log(`\n\x1b[1m${t}\x1b[0m`);
 
 function run(command, label) {
   try {
     execSync(command, { cwd: ROOT, stdio: 'pipe' });
     pass(label);
-    return true;
   } catch {
     fail(`${label} — \`${command}\` failed`);
-    return false;
   }
-}
-
-function readPkg(name) {
-  return JSON.parse(
-    readFileSync(join(ROOT, 'packages', name, 'package.json'), 'utf8')
-  );
 }
 
 // ---------------------------------------------------------------------------
@@ -56,104 +45,137 @@ run('yarn lint', 'lint');
 run('yarn typecheck', 'typecheck');
 run('yarn test', 'tests');
 run('yarn build', 'build');
-run('yarn size', 'bundle budgets');
+run('yarn size', 'bundle budget');
 run('yarn format:check', 'formatting');
 
-section('Package manifests');
-for (const name of PACKAGES) {
-  const pkg = readPkg(name);
-  const id = pkg.name;
+section('Manifest');
 
-  if (pkg.sideEffects === false)
-    pass(`${id}: sideEffects false (tree-shakeable)`);
-  else fail(`${id}: sideEffects must be false for tree-shaking`);
+if (!pkg.name.startsWith('@')) {
+  pass(`name "${pkg.name}" is unscoped — installable with a plain npm i`);
+} else {
+  warn(`name "${pkg.name}" is scoped and needs an npm org`);
+}
 
-  if (pkg.publishConfig?.access === 'public')
-    pass(`${id}: publishConfig.access public`);
-  else
-    fail(
-      `${id}: scoped packages default to restricted — set publishConfig.access`
-    );
+if (pkg.private !== true) pass('not marked private');
+else fail('package.json has "private": true — npm will refuse to publish');
 
-  if (pkg.publishConfig?.provenance === true) pass(`${id}: provenance enabled`);
-  else warn(`${id}: provenance not enabled`);
+if (pkg.sideEffects === false) pass('sideEffects false (tree-shakeable)');
+else fail('sideEffects must be false for tree-shaking');
 
-  if (pkg.license) pass(`${id}: license ${pkg.license}`);
-  else fail(`${id}: no license field`);
+for (const field of [
+  'description',
+  'license',
+  'author',
+  'repository',
+  'homepage',
+  'bugs',
+]) {
+  if (pkg[field]) pass(`${field} present`);
+  else warn(`${field} missing — npm shows it on the package page`);
+}
 
-  // Peer ranges must be WIDE. A caret on react-native locks consumers out of
-  // every future minor, which for React Native means roughly every 8 weeks.
-  const peers = pkg.peerDependencies ?? {};
-  for (const [dep, range] of Object.entries(peers)) {
-    if (range.startsWith('^') || range.startsWith('~')) {
-      fail(`${id}: peer ${dep}="${range}" is too narrow — use a >= range`);
-    }
+if ((pkg.keywords ?? []).length >= 5) {
+  pass(`${pkg.keywords.length} keywords (discoverability)`);
+} else {
+  warn('fewer than 5 keywords');
+}
+
+// Peer ranges must be WIDE. A caret on react-native locks consumers out of
+// every future minor, which for React Native means roughly every 8 weeks.
+const peers = pkg.peerDependencies ?? {};
+const narrow = Object.entries(peers).filter(
+  ([, r]) => r.startsWith('^') || r.startsWith('~')
+);
+if (narrow.length === 0) {
+  pass(`${Object.keys(peers).length} peer ranges are wide`);
+} else {
+  for (const [dep, range] of narrow) {
+    fail(`peer ${dep}="${range}" is too narrow — use >=`);
   }
-  if (Object.keys(peers).length > 0)
-    pass(`${id}: ${Object.keys(peers).length} peer ranges are wide`);
+}
 
-  // Entry points must point at files that exist after a build.
-  for (const field of ['main', 'module', 'types']) {
-    const value = pkg[field];
-    if (value === undefined) continue;
-    const target = join(ROOT, 'packages', name, value);
-    if (existsSync(target)) pass(`${id}: ${field} resolves`);
-    else fail(`${id}: ${field} points at a missing file (${value})`);
+// Anything a consumer must install themselves belongs in peerDependencies, not
+// dependencies — otherwise npm installs a second copy and Reanimated breaks.
+const badDeps = Object.keys(pkg.dependencies ?? {}).filter((dep) =>
+  /^(react|react-native|@shopify\/react-native-skia)/.test(dep)
+);
+for (const dep of badDeps) {
+  fail(
+    `${dep} is a real dependency — it must be a peer, or consumers get a duplicate copy`
+  );
+}
+if (badDeps.length === 0) pass('no React Native packages in dependencies');
+
+section('Build output');
+for (const field of ['main', 'module', 'types']) {
+  const value = pkg[field];
+  if (value === undefined) {
+    fail(`${field} not set`);
+    continue;
   }
+  if (existsSync(join(ROOT, value))) pass(`${field} → ${value}`);
+  else fail(`${field} points at a missing file (${value}) — run yarn build`);
 }
 
 section('Tarball contents');
-for (const name of PACKAGES) {
-  const pkg = readPkg(name);
-  let output;
-  try {
-    output = execSync('npm pack --dry-run --json', {
-      cwd: join(ROOT, 'packages', name),
-      stdio: 'pipe',
-    }).toString();
-  } catch {
-    fail(`${pkg.name}: npm pack failed`);
-    continue;
-  }
+let meta;
+try {
+  // --ignore-scripts because `prepare` (bob build) writes its log to stdout
+  // ahead of the JSON. The build is already verified by the gates above; here
+  // we only want the file manifest.
+  const raw = execSync('npm pack --dry-run --json --ignore-scripts', {
+    cwd: ROOT,
+    stdio: 'pipe',
+  }).toString();
+  meta = JSON.parse(raw.slice(raw.indexOf('[')))[0];
+} catch (error) {
+  fail(`npm pack failed — ${String(error).split('\n')[0]}`);
+}
 
-  const [meta] = JSON.parse(output);
+if (meta) {
   const files = (meta.files ?? []).map((f) => f.path);
 
   const leaked = files.filter(
-    (f) =>
-      /\.test\./.test(f) ||
-      /__tests__/.test(f) ||
-      /\.tsbuildinfo$/.test(f) ||
-      /^bench\//.test(f)
+    (f) => /\.test\./.test(f) || /__tests__/.test(f) || /\.tsbuildinfo$/.test(f)
   );
-
   if (leaked.length === 0)
-    pass(`${pkg.name}: no tests or build artefacts (${files.length} files)`);
-  else fail(`${pkg.name}: ${leaked.length} unwanted files, e.g. ${leaked[0]}`);
+    pass(`no tests or build artefacts (${files.length} files)`);
+  else fail(`${leaked.length} unwanted files, e.g. ${leaked[0]}`);
 
-  const hasTypes = files.some((f) => f.endsWith('.d.ts'));
-  if (hasTypes) pass(`${pkg.name}: ships type declarations`);
-  else fail(`${pkg.name}: no .d.ts in the tarball`);
+  if (files.some((f) => f.endsWith('.d.ts'))) pass('ships type declarations');
+  else fail('no .d.ts in the tarball');
 
-  const sizeKb = Math.round(meta.unpackedSize / 1024);
-  pass(`${pkg.name}: ${sizeKb} kB unpacked`);
+  for (const required of ['README.md', 'LICENSE', 'CHANGELOG.md']) {
+    if (files.includes(required)) pass(`${required} included`);
+    else fail(`${required} missing from the tarball`);
+  }
+
+  if (files.some((f) => f.startsWith('example/'))) {
+    fail('the example app is in the tarball');
+  } else {
+    pass('example app excluded');
+  }
+
+  pass(
+    `${Math.round(meta.unpackedSize / 1024)} kB unpacked, ${Math.round(meta.size / 1024)} kB tarball`
+  );
 }
 
-section('Release readiness');
-const changesetDir = join(ROOT, '.changeset');
-const pending = existsSync(changesetDir)
-  ? execSync('ls .changeset', { cwd: ROOT })
-      .toString()
-      .split('\n')
-      .filter((f) => f.endsWith('.md') && f !== 'README.md')
-  : [];
+section('Registry');
+try {
+  execSync(`npm view ${pkg.name} version`, { stdio: 'pipe' });
+  warn(
+    `${pkg.name} already exists on npm — this would be an update, not a first publish`
+  );
+} catch {
+  pass(`${pkg.name} is available on npm`);
+}
 
-if (pending.length > 0) pass(`${pending.length} pending changeset(s)`);
-else warn('no pending changesets — `changeset publish` would version nothing');
-
-for (const doc of ['README.md', 'CONTEXT.md', 'docs/getting-started.md']) {
-  if (existsSync(join(ROOT, doc))) pass(`${doc} present`);
-  else fail(`${doc} missing`);
+try {
+  const who = execSync('npm whoami', { stdio: 'pipe' }).toString().trim();
+  pass(`logged in to npm as ${who}`);
+} catch {
+  fail('not logged in — run `npm login`');
 }
 
 // ---------------------------------------------------------------------------
@@ -167,14 +189,17 @@ if (failures > 0) {
 }
 
 console.log(
-  `\x1b[32mAll checks passed\x1b[0m${warnings > 0 ? `, ${warnings} warning(s).` : '.'}`
+  `\x1b[32mReady to publish\x1b[0m${warnings > 0 ? `, ${warnings} warning(s).` : '.'}`
 );
 console.log('');
 console.log('This script does NOT publish. To release:');
-console.log('  1. yarn changeset version     # apply pending changesets');
-console.log('  2. review the version bumps and CHANGELOGs');
-console.log('  3. git commit && git push');
-console.log('  4. yarn release               # builds, then changeset publish');
 console.log('');
-console.log('Publishing is public and irreversible. npm allows unpublish only');
-console.log('within 72 hours, and never for a version anything depends on.');
+console.log('  npm publish --access public');
+console.log('');
+console.log(
+  'Your npm account has 2FA on writes, so expect a one-time-password'
+);
+console.log(
+  'prompt. Publishing is irreversible: npm allows unpublish only within'
+);
+console.log('72 hours, and never once another package depends on the version.');

@@ -1,4 +1,4 @@
-# @rnchart
+# react-native-graphify
 
 **Skia-powered charts for React Native. Native performance, no WebView, one API for iOS and Android.**
 
@@ -23,7 +23,7 @@
 ## Install
 
 ```sh
-npm install @rnchart/charts @rnchart/core @rnchart/skia
+npm install react-native-graphify
 ```
 
 Peer dependencies you must already have:
@@ -37,7 +37,7 @@ Skia does not run in Expo Go — you need a [development build](https://docs.exp
 ## Your first chart
 
 ```tsx
-import { Area, Chart, Grid, XAxis, YAxis } from '@rnchart/charts';
+import { Area, Chart, Grid, XAxis, YAxis } from 'react-native-graphify';
 
 const data = [
   { month: 'Jan', revenue: 210 },
@@ -103,13 +103,13 @@ difference between one draw call and two hundred.
 
 ## Honest comparison
 
-| | @rnchart | gifted-charts | victory-native XL | chart-kit |
+| | react-native-graphify | gifted-charts | victory-native XL | chart-kit |
 | --- | --- | --- | --- | --- |
 | Renderer | Skia | react-native-svg | Skia | react-native-svg |
 | Chart types | 7 today | ~15 | ~8 | ~6 |
 | Web support | Planned (v3) | No | No | No |
 | Maturity | **Pre-release** | Mature | Mature | Mature, low activity |
-| Bundle (charts, gzipped) | ~42 kB | — | — | — |
+| Bundle (gzipped) | ~55 kB | — | — | — |
 
 **Use gifted-charts today** if you want breadth and stability right now — it has
 far more chart types and years of production use. **Use victory-native XL** if
@@ -134,19 +134,22 @@ tables lose their credibility.
 
 Run them yourself: `yarn bench`.
 
-## Packages
+## Architecture
 
-| Package | What it is |
+One package, three layers:
+
+| Directory | What it is |
 | --- | --- |
-| [`@rnchart/core`](packages/core) | Renderer-agnostic maths. Pure TypeScript, zero React Native, runs in plain Node. |
-| [`@rnchart/skia`](packages/skia) | Skia renderer adapter. |
-| [`@rnchart/charts`](packages/charts) | The public API. |
+| [`src/core`](src/core) | Renderer-agnostic maths. Pure TypeScript, zero React Native, runs in plain Node. |
+| [`src/skia`](src/skia) | Skia renderer adapter. |
+| [`src/charts`](src/charts) | The components you import. |
 
-`@rnchart/core` having no React Native dependency is not a style choice. Every
-renderer is an adapter over it, which is why the planned web renderer is adapter
-work rather than a rewrite — and why victory-native had to drop web parity when
-it moved to Skia. A lint rule fails the build if anything in `packages/core`
-imports React Native.
+`src/core` having no React Native dependency is not a style choice. Every
+renderer is an adapter over it, which is why a web renderer stays adapter work
+rather than a rewrite — the same reason victory-native had to drop web parity
+when it moved to Skia. **A lint rule fails the build** if anything under
+`src/core` imports React Native, so the boundary is enforced rather than
+merely intended.
 
 ## Documentation
 
@@ -190,17 +193,16 @@ yarn example:ios       # or yarn example:android
 yarn example           # fast loop once a dev client is installed
 ```
 
-Metro resolves `@rnchart/*` to workspace source, so editing `packages/*/src`
+Metro resolves `react-native-graphify` to workspace source, so editing `src/`
 hot-reloads the app with no rebuild.
 
 | Script | Does |
 | --- | --- |
-| `yarn build` | Builds core, then skia, then charts. Order matters. |
-| `yarn test` | Jest, per package. |
-| `yarn bench` | Core performance benchmarks. |
+| `yarn build` | Builds the library with builder-bob. |
+| `yarn test` | Jest. |
+| `yarn bench` | Performance benchmarks. |
 | `yarn size` | Bundle budgets (needs a build first). |
 | `yarn lint` / `yarn typecheck` / `yarn format` | Quality gates. |
-| `yarn changeset` | Record a version bump. |
 | `yarn prepublish:check` | Verifies everything before a release. |
 
 ## Licence

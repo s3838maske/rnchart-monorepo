@@ -13,7 +13,7 @@ each line changed.
 ---
 
 ```
-You are helping me build `@rnchart` — a high-performance, cross-platform charting library for React
+You are helping me build `react-native-graphify` — a high-performance, cross-platform charting library for React
 Native.
 
 LOCKED TECHNICAL DECISIONS (do not suggest alternatives):
@@ -27,16 +27,18 @@ LOCKED TECHNICAL DECISIONS (do not suggest alternatives):
 - Math: d3-scale, d3-shape, d3-array ONLY (never the full d3 bundle)
 - Language: TypeScript 5.9, strict mode, no `any`. NOT TypeScript 7 — typescript-eslint, ts-jest
   and typedoc do not support it yet.
-- Monorepo: yarn 4 workspaces + react-native-builder-bob
+- Packaging: ONE unscoped package built with react-native-builder-bob. The example
+  app is a yarn workspace; the library itself is the repo root.
 - Testing: Jest 29 (React Native's jest-preset is still pinned to the 29 line)
 - Target: React Native 0.86 (Expo SDK 57), New Architecture (Fabric) only. Never write bridge-era
   code.
 
-REPO STRUCTURE:
-packages/core   -> pure TypeScript. ZERO react/react-native imports. Runs in plain Node.
-packages/skia   -> Skia renderer adapter. Bridges core geometry to Skia draw calls.
-packages/charts -> public API. Preset components consumers import.
-example/        -> Expo dev-client app used for visual verification.
+REPO STRUCTURE (single published package: react-native-graphify):
+src/core   -> pure TypeScript. ZERO react/react-native imports. Runs in plain Node.
+src/skia   -> Skia renderer adapter. Bridges core geometry to Skia draw calls.
+src/charts -> public API. Preset components consumers import.
+src/index.ts -> the published entry point.
+example/   -> Expo dev-client app used for visual verification.
 
 HARD PERFORMANCE RULES (violating these fails review):
 - No setState / useState updates during gestures or animation frames. SharedValue only.
@@ -83,7 +85,7 @@ which `composite: true` rejects. The working arrangement is:
   cross-package imports through the workspace symlink to built declarations —
   publishing resolves to output.
 
-**Metro resolves `@rnchart/*` to source via an explicit `resolveRequest`.** The
+**Metro resolves `react-native-graphify/*` to source via an explicit `resolveRequest`.** The
 packages publish an `exports` map, and Metro honours `exports` ahead of the
 `react-native` field, so the usual `"react-native": "./src/index.ts"` trick sends
 development builds to a `lib/` directory that does not exist before a build. See
