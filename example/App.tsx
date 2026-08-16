@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import { StatusBar, StyleSheet, View } from 'react-native';
 import { Placeholder } from '@rnchart/charts';
 
 /**
@@ -10,18 +10,22 @@ import { Placeholder } from '@rnchart/charts';
  * which resolves `@rnchart/core`.
  */
 export default function App(): ReactElement {
+  // Plain View rather than SafeAreaView: RN 0.86 deprecates SafeAreaView in
+  // favour of react-native-safe-area-context. Adding that dependency is not
+  // justified for a centred placeholder — revisit when real chart screens with
+  // edge-to-edge layout arrive.
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <View style={styles.root}>
       <StatusBar barStyle="default" />
       <View style={styles.center}>
         <Placeholder />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  root: {
     flex: 1,
   },
   center: {
