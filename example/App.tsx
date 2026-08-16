@@ -3,16 +3,23 @@ import type { ReactElement, ReactNode } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
+  ActivityGauge,
+  AngularAxis,
   Area,
   Bar,
   Chart,
   Crosshair,
+  Gauge,
   Grid,
   Legend,
   Line,
   PieChart,
+  PolarChart,
+  PolarGrid,
+  Radar,
   Scatter,
   Tooltip,
+  WindRose,
   XAxis,
   YAxis,
 } from 'react-native-graphify';
@@ -44,6 +51,26 @@ const SPLIT = [
   { label: 'Desktop', share: 28 },
   { label: 'Tablet', share: 14 },
   { label: 'Other', share: 12 },
+];
+
+const SKILLS = [
+  { axis: 'Speed', alpha: 82, beta: 55 },
+  { axis: 'Power', alpha: 64, beta: 78 },
+  { axis: 'Range', alpha: 45, beta: 90 },
+  { axis: 'Accuracy', alpha: 88, beta: 61 },
+  { axis: 'Control', alpha: 70, beta: 72 },
+  { axis: 'Stamina', alpha: 55, beta: 84 },
+];
+
+const WIND = [
+  { dir: 'N', calm: 12, breeze: 8, gale: 3 },
+  { dir: 'NE', calm: 7, breeze: 11, gale: 2 },
+  { dir: 'E', calm: 15, breeze: 6, gale: 1 },
+  { dir: 'SE', calm: 9, breeze: 13, gale: 4 },
+  { dir: 'S', calm: 18, breeze: 9, gale: 6 },
+  { dir: 'SW', calm: 11, breeze: 15, gale: 5 },
+  { dir: 'W', calm: 6, breeze: 10, gale: 8 },
+  { dir: 'NW', calm: 10, breeze: 7, gale: 3 },
 ];
 
 const SCATTERED = Array.from({ length: 40 }, (_, i) => ({
@@ -238,6 +265,93 @@ export default function App(): ReactElement {
           />
         </Section>
 
+        <Section
+          title="Radar"
+          caption="Two series over 6 axes. <Radar> only draws — the polar coordinate system does the projection."
+        >
+          <PolarChart
+            data={SKILLS}
+            categoryKey="axis"
+            yKeys={['alpha', 'beta']}
+            height={300}
+          >
+            <PolarGrid />
+            <AngularAxis />
+            <Radar seriesKey="alpha" />
+            <Radar seriesKey="beta" />
+          </PolarChart>
+        </Section>
+
+        <Section
+          title="Radar — independent axes"
+          caption="Each spoke normalises to its own min/max. Essential when the axes are in different units."
+        >
+          <PolarChart
+            data={SKILLS}
+            categoryKey="axis"
+            yKeys={['alpha', 'beta']}
+            independentAxes
+            height={300}
+          >
+            <PolarGrid />
+            <AngularAxis />
+            <Radar seriesKey="alpha" />
+            <Radar seriesKey="beta" />
+          </PolarChart>
+        </Section>
+
+        <Section
+          title="Wind rose"
+          caption="Stacked polar columns over 8 compass directions."
+        >
+          <PolarChart
+            data={WIND}
+            categoryKey="dir"
+            yKeys={['calm', 'breeze', 'gale']}
+            stacked
+            height={300}
+          >
+            <PolarGrid rings={3} spokes={false} />
+            <AngularAxis />
+            <WindRose />
+          </PolarChart>
+        </Section>
+
+        <Section
+          title="Gauge"
+          caption="Coloured bands across an arbitrary angle range, with a tapered needle."
+        >
+          <Gauge
+            value={72}
+            bands={[
+              { from: 0, to: 40, color: '#10b981' },
+              { from: 40, to: 75, color: '#f59e0b' },
+              { from: 75, to: 100, color: '#ef4444' },
+            ]}
+            height={200}
+          >
+            <Text style={styles.donutValue}>72</Text>
+            <Text style={styles.donutLabel}>Load</Text>
+          </Gauge>
+        </Section>
+
+        <Section
+          title="Activity rings"
+          caption="Concentric progress rings with rounded caps."
+        >
+          <ActivityGauge
+            rings={[
+              { value: 82, max: 100 },
+              { value: 61, max: 100 },
+              { value: 45, max: 100 },
+            ]}
+            height={240}
+          >
+            <Text style={styles.donutValue}>82%</Text>
+            <Text style={styles.donutLabel}>Move</Text>
+          </ActivityGauge>
+        </Section>
+
         <Section title="Donut" caption="Arc geometry computed in core.">
           <PieChart
             data={SPLIT}
@@ -269,8 +383,7 @@ export default function App(): ReactElement {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Phases 1-14 · core, layout, decimation, 5 series, cursor, legend,
-            theming
+            v1.1.0 · cartesian + polar · 10 chart types
           </Text>
         </View>
       </ScrollView>

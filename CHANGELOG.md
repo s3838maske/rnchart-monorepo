@@ -3,9 +3,33 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [0.2.0] — unreleased
 
-Nothing yet.
+v1.1.0 of the roadmap: polar and radial charts.
+
+### Added
+
+- **`<PolarChart>`** — a polar coordinate container. Publishes a
+  `CoordinateSystem` rather than raw scales, so series ask it how to connect
+  two points instead of assuming a straight line.
+- **`<Radar>`** — closed polygons over categorical spokes, with
+  `independentAxes` so each spoke can normalise to its own min/max. That is the
+  feature that makes comparing revenue in lakhs against an NPS out of 10
+  actually readable.
+- **`<WindRose>`** — stacked polar columns.
+- **`<Gauge>`** — angular gauge with coloured bands, an optional sweep
+  gradient and a tapered needle.
+- **`<ActivityGauge>`** — concentric progress rings with rounded caps.
+- **`<PolarGrid>`, `<AngularAxis>`, `<RadialAxis>`** — spiderweb or circular
+  grid, category labels around the circumference, value labels along a spoke.
+- Core: `createCartesian`, `createPolar`, `categoryAngle`, `uprightRotation`
+  and the `CoordinateSystem` / `PathSegment` contract.
+
+### Fixed
+
+- `<WindRose>` wedges overflowed the chart because the radial domain was
+  computed from individual values rather than stacked totals. `<PolarChart>`
+  now takes a `stacked` prop that scales the radius to per-category sums.
 
 ## [0.1.0] — unreleased
 

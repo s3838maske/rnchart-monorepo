@@ -43,6 +43,34 @@ export { PieChart } from './charts/series/Pie';
 export type { PieChartProps } from './charts/series/Pie';
 
 // ---------------------------------------------------------------------------
+// Polar (v1.1.0)
+// ---------------------------------------------------------------------------
+
+export { PolarChart } from './charts/PolarChart';
+export type { PolarChartProps } from './charts/PolarChart';
+
+export { usePolar } from './charts/PolarContext';
+export type { PolarContextValue } from './charts/PolarContext';
+
+export { AngularAxis, PolarGrid, RadialAxis } from './charts/polar/PolarGrid';
+export type {
+  AngularAxisProps,
+  PolarGridProps,
+  RadialAxisProps,
+} from './charts/polar/PolarGrid';
+
+export { Radar, WindRose } from './charts/polar/Radar';
+export type { RadarProps, WindRoseProps } from './charts/polar/Radar';
+
+export { ActivityGauge, Gauge } from './charts/polar/Gauge';
+export type {
+  ActivityGaugeProps,
+  ActivityRing,
+  GaugeBand,
+  GaugeProps,
+} from './charts/polar/Gauge';
+
+// ---------------------------------------------------------------------------
 // Interaction
 // ---------------------------------------------------------------------------
 

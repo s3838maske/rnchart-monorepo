@@ -52,6 +52,22 @@ export type {
   ViewportSlice,
 } from './perf';
 
+export {
+  categoryAngle,
+  createCartesian,
+  createPolar,
+  samePoint,
+  uprightRotation,
+} from './coord';
+export type {
+  CartesianOptions,
+  CoordinateSystem,
+  CoordinateSystemType,
+  PathSegment,
+  Point,
+  PolarOptions,
+} from './coord';
+
 export { computeArcs, monotoneTangents } from './curve';
 export type { Arc, ArcOptions } from './curve';
 

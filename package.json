@@ -1,7 +1,7 @@
 {
   "name": "react-native-graphify",
-  "version": "0.1.0",
-  "description": "Skia-powered charts for React Native. Line, area, column, scatter, bubble and pie with a UI-thread touch cursor, crosshair and tooltip. No WebView, one API for iOS and Android.",
+  "version": "0.2.0",
+  "description": "Skia-powered charts for React Native. Line, area, column, scatter, bubble, pie, radar, wind rose and gauges with a UI-thread touch cursor, crosshair and tooltip. No WebView, one API for iOS and Android.",
   "keywords": [
     "react-native",
     "chart",
@@ -22,7 +22,11 @@
     "ios",
     "android",
     "expo",
-    "typescript"
+    "typescript",
+    "radar-chart",
+    "gauge",
+    "polar-chart",
+    "wind-rose"
   ],
   "repository": {
     "type": "git",
