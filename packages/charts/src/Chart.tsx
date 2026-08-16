@@ -17,7 +17,7 @@ import { createMeasureText, useChartFont } from '@rnchart/skia';
 
 import { ChartProvider } from './ChartContext';
 import type { ChartContextValue, SeriesDatum } from './ChartContext';
-import { seriesColorAt } from './theme';
+import { seriesColorAt } from './colors';
 import { CursorProvider, nearestIndexByX } from './interaction/cursorState';
 import type { CursorState } from './interaction/cursorState';
 import { triggerImpact } from './interaction/haptics';

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -7,6 +8,7 @@ import {
   Chart,
   Crosshair,
   Grid,
+  Legend,
   Line,
   PieChart,
   Scatter,
@@ -69,6 +71,20 @@ function Section({
 }
 
 export default function App(): ReactElement {
+  const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
+
+  const toggleKey = (key: string): void => {
+    setHiddenKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
+
+  // Toggling removes the series entirely, so the domain recomputes against
+  // what is left rather than leaving a gap where the hidden series was.
+  const visibleKeys = ['revenue', 'target'].filter(
+    (k) => !hiddenKeys.includes(k)
+  );
+
   return (
     <GestureHandlerRootView style={styles.root}>
       <StatusBar barStyle="dark-content" />
@@ -204,6 +220,24 @@ export default function App(): ReactElement {
           </Chart>
         </Section>
 
+        <Section
+          title="Legend — tap to toggle"
+          caption="Hidden series dim rather than vanish, and the y domain rescales to what remains."
+        >
+          <Chart data={MONTHLY} xKey="month" yKeys={visibleKeys} height={200}>
+            <Grid />
+            <YAxis />
+            <XAxis />
+            <Bar grouped />
+          </Chart>
+          <Legend
+            items={['revenue', 'target']}
+            hidden={hiddenKeys}
+            onToggle={toggleKey}
+            align="center"
+          />
+        </Section>
+
         <Section title="Donut" caption="Arc geometry computed in core.">
           <PieChart
             data={SPLIT}
@@ -235,8 +269,8 @@ export default function App(): ReactElement {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Phases 1-12 · core, layout solver, decimation, hit-testing, 5
-            series, cursor
+            Phases 1-14 · core, layout, decimation, 5 series, cursor, legend,
+            theming
           </Text>
         </View>
       </ScrollView>

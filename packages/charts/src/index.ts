@@ -41,7 +41,26 @@ export type { TooltipProps } from './interaction/Tooltip';
 export { useCursor, nearestIndexByX } from './interaction/cursorState';
 export type { CursorState } from './interaction/cursorState';
 
-export { SERIES_COLORS, seriesColorAt, withAlpha } from './theme';
+export { Legend } from './overlays/Legend';
+export type { LegendItem, LegendProps, LegendSymbol } from './overlays/Legend';
+
+export { useChartAnimation } from './theme/useChartAnimation';
+export type { ChartAnimation } from './theme/useChartAnimation';
+
+export {
+  ChartThemeProvider,
+  resetDefaults,
+  seriesColor,
+  setDefaults,
+  useChartTheme,
+} from './theme/ThemeProvider';
+export type {
+  ChartThemeProviderProps,
+  ColorSchemeName,
+  UseChartThemeOptions,
+} from './theme/ThemeProvider';
+
+export { SERIES_COLORS, seriesColorAt, withAlpha } from './colors';
 
 export { Placeholder } from './Placeholder';
 export type { PlaceholderProps } from './Placeholder';

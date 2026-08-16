@@ -10,7 +10,7 @@ import { useDerivedValue } from 'react-native-reanimated';
 
 import { useChart } from '../ChartContext';
 import { useCursor } from './cursorState';
-import { CHART_COLORS, withAlpha } from '../theme';
+import { CHART_COLORS, withAlpha } from '../colors';
 
 export type CrosshairProps = {
   readonly color?: string;

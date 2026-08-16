@@ -7,7 +7,7 @@ import { computeArcs } from '@rnchart/core';
 import type { Arc } from '@rnchart/core';
 
 import type { SeriesDatum } from '../ChartContext';
-import { seriesColorAt } from '../theme';
+import { seriesColorAt } from '../colors';
 
 export type PieChartProps = {
   readonly data: readonly SeriesDatum[];

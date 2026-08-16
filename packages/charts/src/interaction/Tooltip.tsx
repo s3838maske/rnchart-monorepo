@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReactElement } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
@@ -12,7 +12,7 @@ import { runOnJS } from 'react-native-worklets';
 import { useChart } from '../ChartContext';
 import type { SeriesDatum } from '../ChartContext';
 import { useCursor } from './cursorState';
-import { CHART_COLORS } from '../theme';
+import { CHART_COLORS } from '../colors';
 
 export type TooltipProps = {
   /** Show every series' value at the snapped x, each with a colour swatch. */
@@ -68,7 +68,20 @@ export function Tooltip({
   return (
     <Animated.View
       pointerEvents="none"
-      style={[styles.container, { width, top: plotArea.y + 8 }, style]}
+      // Android composites an `elevation` shadow as a layer SEPARATE from the
+      // view it belongs to. Fading a parent's opacity therefore animates the
+      // card and its shadow on different schedules — the card appears, then the
+      // shadow catches up, and on release the shadow leaves first. Two fixes,
+      // both required: the shadow lives on this animated view rather than on a
+      // child, and offscreen alpha compositing forces card and shadow to
+      // composite as ONE layer before opacity is applied.
+      needsOffscreenAlphaCompositing={Platform.OS === 'android'}
+      style={[
+        styles.container,
+        styles.card,
+        { width, top: plotArea.y + 8 },
+        style,
+      ]}
     >
       <TooltipBody
         shared={shared}
@@ -121,7 +134,7 @@ function TooltipBody({
   const keys = shared ? yKeys : yKeys.slice(0, 1);
 
   return (
-    <View style={styles.card}>
+    <View>
       <TooltipLabel
         data={data}
         xKey={xKey}

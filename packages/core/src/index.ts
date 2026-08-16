@@ -12,6 +12,31 @@ export type { Rect, Size } from './geometry';
 export { clamp, createRect } from './geometry';
 
 export {
+  contrastRatio,
+  contrastTheme,
+  darkTheme,
+  defineTheme,
+  lightTheme,
+  mergeTheme,
+  PALETTES,
+  paletteColorAt,
+  parseHex,
+  perceptualDistance,
+  readableTextColor,
+  relativeLuminance,
+  simulate,
+  verifyPalette,
+} from './theme';
+export type {
+  ChartTheme,
+  ChartThemeInput,
+  ColorVisionType,
+  PaletteName,
+  PaletteReport,
+  Rgb,
+} from './theme';
+
+export {
   autoDecimate,
   clipToViewport,
   createHitTester,
@@ -29,6 +54,13 @@ export type {
 
 export { computeArcs, monotoneTangents } from './curve';
 export type { Arc, ArcOptions } from './curve';
+
+export { resolveLabelPlacement } from './layout';
+export type {
+  LabelCandidate,
+  LabelPlacementOptions,
+  PlacedLabel,
+} from './layout';
 
 export {
   formatValue,

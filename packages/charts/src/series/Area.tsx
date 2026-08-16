@@ -9,7 +9,7 @@ import {
 } from '@shopify/react-native-skia';
 
 import { useChart } from '../ChartContext';
-import { withAlpha } from '../theme';
+import { withAlpha } from '../colors';
 import { buildLinePath, useSeriesPoints } from './Line';
 import type { CurveKind } from './Line';
 

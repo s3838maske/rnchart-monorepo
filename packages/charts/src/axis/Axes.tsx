@@ -4,7 +4,7 @@ import { Group, Path, Skia, Text } from '@shopify/react-native-skia';
 import { useChartFont } from '@rnchart/skia';
 
 import { useChart } from '../ChartContext';
-import { CHART_COLORS } from '../theme';
+import { CHART_COLORS } from '../colors';
 
 export type GridProps = {
   readonly horizontal?: boolean;
