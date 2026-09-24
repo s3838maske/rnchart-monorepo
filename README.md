@@ -15,10 +15,11 @@
 
 <p align="center"><em>Real captures from the Android emulator and the iOS simulator — same source, same pixels.</em></p>
 
-> **Status: 1.0.0.** All 27 phases of the v1 roadmap are complete — cartesian
+> **Status: 1.1.0.** All 27 phases of the v1 roadmap are complete — cartesian
 > and polar series, interaction, streaming, drilldown, annotations, statistical
-> series and a screen-reader layer. Semver applies from here: breaking API
-> changes mean 2.0.0. See [What's not done](#whats-not-done) before adopting.
+> series and a screen-reader layer — plus a Highcharts-style
+> [options API](docs/options-api.md). Semver applies: breaking API changes mean
+> 2.0.0. See [What's not done](#whats-not-done) before adopting.
 
 ## Install
 
