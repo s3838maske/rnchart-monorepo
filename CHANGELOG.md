@@ -3,6 +3,24 @@
 All notable changes to this project are documented here.
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `<Graphify options={...} />` — a whole chart from one Highcharts-style
+  options object: line, spline, area, areaspline, column, scatter and pie,
+  combos through a per-series `type`, titles, axis titles, tooltip prefix and
+  suffix, data labels, and a legend you can tap to toggle. The options type is a
+  deliberate subset of Highcharts, so an unsupported key fails to compile
+  instead of being silently ignored. It is an adapter over the existing
+  components, not a second renderer. See [docs/options-api.md](docs/options-api.md).
+- `<DataLabels>` — value labels on points and columns. Overlapping labels are
+  dropped (the larger value keeps its label) using `resolveLabelPlacement`, and
+  the default format matches the y axis.
+- `<Chart colors>` — series colours in `yKeys` order, so the tooltip and
+  crosshair match custom series colours.
+- `<Bar seriesKeys>` — group a chosen set of keys, for column + line combos.
+
 ## [1.0.0] — 2026-08-17
 
 **First stable release.** All 27 phases of the v1 roadmap are complete:

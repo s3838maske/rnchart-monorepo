@@ -70,6 +70,28 @@ Add a touch cursor with a tooltip:
 </Chart>
 ```
 
+### Or: Highcharts-style options
+
+Already have Highcharts configs? Pass the same object shape to `<Graphify>`:
+
+```tsx
+import { Graphify } from 'react-native-graphify';
+import type { GraphifyOptions } from 'react-native-graphify';
+
+const options: GraphifyOptions = {
+  chart: { type: 'line', height: 400 },
+  title: { text: 'Monthly Sales' },
+  xAxis: { categories: ['Jan', 'Feb', 'Mar', 'Apr'] },
+  tooltip: { valuePrefix: '₹' },
+  plotOptions: { line: { dataLabels: { enabled: true } } },
+  series: [{ name: 'Sales', data: [12000, 18000, 15000, 22000] }],
+};
+
+<Graphify options={options} />;
+```
+
+It covers a typed subset of Highcharts — see [Options API](docs/options-api.md).
+
 ## What it does today
 
 | Series | Status |
@@ -166,6 +188,7 @@ merely intended.
 ## Documentation
 
 - [Getting started](docs/getting-started.md)
+- [Options API (Highcharts-style)](docs/options-api.md)
 - [Chart types](docs/chart-types.md)
 - [Interaction](docs/interaction.md)
 - [Accessibility](docs/accessibility.md)
@@ -185,7 +208,8 @@ Being explicit, because a feature table that hides gaps costs more trust than it
   labels, values and traversal order are correct — but reading a tree is not
   the same as navigating one.
 - **No screenshot regression tests.** See [docs/screenshot-testing.md](docs/screenshot-testing.md) for why the tool the roadmap named is not usable.
-- **No plugin architecture or Highcharts adapter** (v2.0.0).
+- **No plugin architecture** (v2.0.0). The Highcharts-style [options API](docs/options-api.md)
+  covers a typed subset of Highcharts, not all of it.
 - **No financial module, heatmaps, treemaps, maps, Gantt or web renderer** — roadmap phases 28–41.
 - **Pie and scatter are partial** — no slice explode, connector labels, quadtree-backed tap targets or trend lines yet.
 

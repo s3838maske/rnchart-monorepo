@@ -29,6 +29,8 @@ export type ChartProps = {
   readonly data: readonly SeriesDatum[];
   readonly xKey: string;
   readonly yKeys: readonly string[];
+  /** Series colours in `yKeys` order, wrapping. Defaults to the built-in palette. */
+  readonly colors?: readonly string[];
   readonly xScale?: XScaleKind;
   readonly yDomain?: readonly [number, number];
   /** Extend the y domain to include zero. Defaults true for honest baselines. */
@@ -92,6 +94,7 @@ export function Chart({
   data,
   xKey,
   yKeys,
+  colors,
   xScale = 'band',
   yDomain,
   includeZero = true,
@@ -237,7 +240,12 @@ export function Chart({
       xKey,
       yKeys,
       animate,
-      colorFor: (key) => seriesColorAt(Math.max(0, yKeys.indexOf(key))),
+      colorFor: (key) => {
+        const index = Math.max(0, yKeys.indexOf(key));
+        return colors !== undefined && colors.length > 0
+          ? (colors[index % colors.length] ?? seriesColorAt(index))
+          : seriesColorAt(index);
+      },
       valuesFor: (key) => series.get(key)?.values ?? new Float32Array(0),
       validFor: (key) => series.get(key)?.valid ?? new Uint8Array(0),
       xAt: (index) => {
@@ -249,7 +257,7 @@ export function Chart({
         return base + xAxis.scale.bandwidth / 2;
       },
     };
-  }, [layout, data, xKey, yKeys, series, categories, animate]);
+  }, [layout, data, xKey, yKeys, colors, series, categories, animate]);
 
   // ---- Cursor (phase 12) ------------------------------------------------
   // Pixel x per datum, as a plain array so it can cross into a worklet.

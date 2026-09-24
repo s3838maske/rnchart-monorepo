@@ -18,6 +18,20 @@
 // Components
 // ---------------------------------------------------------------------------
 
+export { Graphify } from './charts/options/Graphify';
+export type { GraphifyProps } from './charts/options/Graphify';
+export type {
+  GraphifyAxisTitle,
+  GraphifyDataLabels,
+  GraphifyOptions,
+  GraphifyPieOptions,
+  GraphifyPoint,
+  GraphifyPointObject,
+  GraphifySeries,
+  GraphifySeriesOptions,
+  GraphifySeriesType,
+} from './charts/options/types';
+
 export { Chart } from './charts/Chart';
 export type { ChartProps, XScaleKind } from './charts/Chart';
 
@@ -174,6 +188,9 @@ export type { PatternKind, PatternProps } from './charts/patterns';
 // ---------------------------------------------------------------------------
 // Overlays and theming
 // ---------------------------------------------------------------------------
+
+export { DataLabels } from './charts/overlays/DataLabels';
+export type { DataLabelsProps } from './charts/overlays/DataLabels';
 
 export { Legend } from './charts/overlays/Legend';
 export type {

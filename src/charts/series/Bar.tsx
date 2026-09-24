@@ -10,6 +10,11 @@ import type { PatternKind } from '../patterns';
 
 export type BarProps = {
   readonly seriesKey?: string;
+  /**
+   * Render these keys as one grouped set — for a combo chart, where the other
+   * yKeys are lines. Ignored when seriesKey is given.
+   */
+  readonly seriesKeys?: readonly string[];
   /** Render every yKey as a grouped set. Ignored when seriesKey is given. */
   readonly grouped?: boolean;
   readonly color?: string;
@@ -32,6 +37,23 @@ export type BarProps = {
 };
 
 /**
+ * Where column `slot` of a `count`-wide group sits within the band centred
+ * on `centre`. Shared with `<DataLabels>` so a label can never drift off its bar.
+ */
+export function barSlot(
+  centre: number,
+  bandwidth: number,
+  barPadding: number,
+  slot: number,
+  count: number
+): { readonly x: number; readonly width: number } {
+  const band = bandwidth > 0 ? bandwidth : 24;
+  const groupWidth = band * (1 - barPadding);
+  const width = Math.max(1, groupWidth / Math.max(1, count));
+  return { x: centre - groupWidth / 2 + slot * width, width };
+}
+
+/**
  * Column series.
  *
  * Every bar of one series accumulates into a SINGLE SkPath via addRRect. This
@@ -45,6 +67,7 @@ export type BarProps = {
  */
 export function Bar({
   seriesKey,
+  seriesKeys,
   grouped = false,
   color,
   cornerRadius = 4,
@@ -69,16 +92,15 @@ export function Bar({
     () =>
       seriesKey !== undefined
         ? [seriesKey]
-        : grouped
-          ? [...yKeys]
-          : yKeys.slice(0, 1),
-    [seriesKey, grouped, yKeys]
+        : seriesKeys !== undefined
+          ? [...seriesKeys]
+          : grouped
+            ? [...yKeys]
+            : yKeys.slice(0, 1),
+    [seriesKey, seriesKeys, grouped, yKeys]
   );
 
   const paths = useMemo(() => {
-    const band = xScale.bandwidth > 0 ? xScale.bandwidth : 24;
-    const groupWidth = band * (1 - barPadding);
-    const barWidth = Math.max(1, groupWidth / Math.max(1, keys.length));
     const zeroY = Math.min(
       Math.max(yScale.map(0), plotArea.y),
       plotArea.y + plotArea.height
@@ -92,9 +114,13 @@ export function Bar({
       for (let i = 0; i < values.length; i += 1) {
         if (valid[i] !== 1) continue;
         const value = values[i] as number;
-        const centre = xAt(i);
-        const groupLeft = centre - groupWidth / 2;
-        const x = groupLeft + k * barWidth;
+        const { x, width: barWidth } = barSlot(
+          xAt(i),
+          xScale.bandwidth,
+          barPadding,
+          k,
+          keys.length
+        );
 
         const valueY = yScale.map(value);
         let top = Math.min(valueY, zeroY);

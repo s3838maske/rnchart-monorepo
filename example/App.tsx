@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
-import type { StreamingChartRef } from 'react-native-graphify';
+import type { GraphifyOptions, StreamingChartRef } from 'react-native-graphify';
 import { ScrollView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import {
@@ -20,6 +20,7 @@ import {
   Dumbbell,
   ErrorBars,
   Gauge,
+  Graphify,
   Grid,
   Legend,
   Line,
@@ -42,6 +43,77 @@ import {
   useChart,
   waterfallDomain,
 } from 'react-native-graphify';
+
+// ---------------------------------------------------------------------------
+// Options API — Highcharts-style configs, typed so a typo is a compile error.
+// ---------------------------------------------------------------------------
+
+const SALES_OPTIONS: GraphifyOptions = {
+  chart: { type: 'line', height: 400 },
+  title: { text: 'Monthly Sales' },
+  subtitle: { text: 'Sales performance for 2026' },
+  xAxis: {
+    categories: [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ],
+  },
+  yAxis: { title: { text: 'Sales' } },
+  tooltip: { shared: true, valuePrefix: '₹' },
+  plotOptions: {
+    line: { dataLabels: { enabled: true }, enableMouseTracking: true },
+  },
+  series: [
+    {
+      name: 'Sales',
+      data: [
+        12000, 18000, 15000, 22000, 28000, 32000, 30000, 35000, 42000, 39000,
+        45000, 52000,
+      ],
+    },
+  ],
+  credits: { enabled: false },
+};
+
+const COMBO_OPTIONS: GraphifyOptions = {
+  chart: { type: 'column', height: 340 },
+  title: { text: 'Revenue vs target' },
+  xAxis: { categories: ['Q1', 'Q2', 'Q3', 'Q4'] },
+  tooltip: { valuePrefix: '$', valueSuffix: 'k' },
+  plotOptions: { column: { dataLabels: { enabled: true } } },
+  series: [
+    { name: '2025', data: [120, 180, 160, 210] },
+    { name: '2026', data: [140, 200, 190, 260] },
+    { name: 'Target', type: 'spline', data: [130, 190, 200, 240] },
+  ],
+};
+
+const SHARE_OPTIONS: GraphifyOptions = {
+  chart: { type: 'pie', height: 320 },
+  title: { text: 'Traffic by device' },
+  plotOptions: { pie: { innerSize: '60%' } },
+  series: [
+    {
+      name: 'Share',
+      data: [
+        { name: 'Mobile', y: 46 },
+        { name: 'Desktop', y: 28 },
+        { name: 'Tablet', y: 14 },
+        { name: 'Other', y: 12 },
+      ],
+    },
+  ],
+};
 
 const MONTHLY = [
   { month: 'Jan', revenue: 210, target: 180, units: 42 },
@@ -300,6 +372,27 @@ export default function App(): ReactElement {
         <Text style={styles.subheading}>
           Skia-powered charts for React Native
         </Text>
+
+        <Section
+          title="Options API — Highcharts style"
+          caption="One options object, the same shape as Highcharts. Drag for the tooltip; tap the legend to toggle."
+        >
+          <Graphify options={SALES_OPTIONS} />
+        </Section>
+
+        <Section
+          title="Options API — column + spline combo"
+          caption="A per-series type overrides chart.type. Columns group, the spline draws on top."
+        >
+          <Graphify options={COMBO_OPTIONS} />
+        </Section>
+
+        <Section
+          title="Options API — donut"
+          caption="innerSize '60%'. Tap a legend entry to hide its slice."
+        >
+          <Graphify options={SHARE_OPTIONS} />
+        </Section>
 
         <Section
           title="Touch me — cursor, crosshair and tooltip"
